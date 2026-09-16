@@ -543,10 +543,18 @@
     <div class="field" style="margin-top:14px;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" id="meta_quant_limitada" style="width:16px;height:16px;">
-        <strong>Transporte em quantidade limitada ("QUANT. LTDA" no documento)?</strong>
+        <strong>Quantidade Limitada POR VEÍCULO ("QUANT. LTDA" no documento, peso em kg)?</strong>
       </label>
-      <small style="display:block;margin-top:4px;font-size:11px;color:var(--texto-claro);">⚠ Conceito exclusivo de transporte FRACIONADO (Manual MPO-005, item 16.1) — não existe pra granel. Se marcado, o app dispensa automaticamente CETPP, proibição de carona, EPI, Sinalização e parte do ESE (calços/cones/alicate/chave de bateria) — que continuam exigidos são: extintor, documentação do veículo/equipamento, precauções de manuseio (estiva), TMO, proibições de alimento/animal/fumar e embalagens (Manual MPO-005, Cap. VI, item 20).</small>
+      <small style="display:block;margin-top:4px;font-size:11px;color:var(--texto-claro);">⚠ Conceito exclusivo de transporte FRACIONADO (Manual MPO-005, item 16.1) — não existe pra granel. <strong>NÃO é automático pelo peso</strong> — só marque se o documento de transporte realmente trouxer a expressão "quantidade limitada" ou "QUANT. LTDA" junto da descrição do produto, E (regra específica, item 16.1.1) a quantidade estiver expressa em quilogramas (kg). Sem isso escrito no documento, não use essa dispensa mesmo que o peso real esteja dentro do limite. Se marcado, o app dispensa automaticamente CETPP, proibição de carona, EPI, Sinalização e parte do ESE (calços/cones/alicate/chave de bateria) — que continuam exigidos são: extintor, documentação do veículo/equipamento, precauções de manuseio (estiva), TMO, proibições de alimento/animal/fumar e embalagens (Manual MPO-005, Cap. VI, item 20).</small>
       <div id="notaQuantLimitadaGranel" style="display:none;"></div>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="meta_quant_limitada_embalagem" style="width:16px;height:16px;">
+        <strong>Quantidade Limitada POR EMBALAGEM INTERNA (volumes ≤30kg, "QUANT. LTDA" no documento)?</strong>
+      </label>
+      <small style="display:block;margin-top:4px;font-size:11px;color:var(--texto-claro);">⚠ Regime DIFERENTE do "por veículo" acima — pode ter um, o outro, os dois, ou nenhum. Exige também a expressão "quantidade limitada"/"QUANT. LTDA" no documento (Manual MPO-005, item 16.1), e que cada volume não exceda 30kg (item 16.1.2). Se marcado, dispensa automaticamente a Segregação entre produtos perigosos. Nas Embalagens, ficam dispensadas só as variantes de identificação/homologação/selo de conformidade (o app avisa quando você marcar uma dessas) — deterioração, inadequação e outras continuam valendo normalmente. ⚠ Sinalização do veículo só é dispensada se o carregamento TOTAL for de até 1.000kg — o app não calcula isso automaticamente, você que avalia o peso total real da carga.</small>
     </div>
 
     <div class="field" style="margin-top:14px;">
@@ -682,7 +690,7 @@ const SECTIONS = [
   { title: "8. Condições da Carga/Embalagens", items: [
     { id: "estiva", nome: "Estiva", desc: "Carga fracionada acondicionada e ancorada de forma segura?" },
     { id: "embalagens", nome: "Embalagens", desc: "Integridade, vedação, ausência de resíduos externos, rotulagem, marcação de identificação, homologação e selo INMETRO (embalagens nacionais)." },
-    { id: "cofre_carga", nome: "Cofre de Carga", desc: "Se houver cofre de carga em uso (pra segregar PP de alimento ou de outro produto incompatível), ele está adequado (estanque) e identificado corretamente? Se não há cofre de carga em uso, marcar N/A." },
+    { id: "cofre_carga", nome: "Cofre de Carga", desc: "Exclusivo de transporte FRACIONADO (Manual MPO-005, item 13.1 — por definição, é caixa de contenção usada nesse tipo de transporte, não existe em granel). Se houver cofre de carga em uso (pra segregar PP de alimento ou de outro produto incompatível), ele está adequado (estanque) e identificado corretamente? Se não há cofre de carga em uso, marcar N/A." },
   ]},
   { title: "Outras Constatações", tipo: "proibicao", contaProgresso: false, items: [
     { id: "sinistro_avaria", subtitulo: "Ocorrências Durante o Transporte", nome: "Sinistro/Avaria — Providências Não Adotadas", desc: "Houve sinistro, avaria, emergência, parada técnica, falha mecânica ou outro fato que exigiu a imobilização do veículo, e o condutor/auxiliar deixou de adotar as providências exigidas (Art. 24 ou 27)? Se não houve nenhum evento desse tipo na fiscalização, marcar NÃO." },
@@ -989,7 +997,6 @@ function montarPainelSegurancaSvg(numeroRisco, numeroOnu){
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:170px;display:block;margin:0 auto;">
     <rect x="0" y="0" width="${W}" height="${H}" fill="#000"/>
     <rect x="${borda}" y="${borda}" width="${W-2*borda}" height="${H-2*borda}" fill="${corLaranja}"/>
-    <line x1="${borda}" y1="${H/2}" x2="${W-borda}" y2="${H/2}" stroke="#000" stroke-width="${borda*0.55}"/>
     ${svgRisco}
     ${svgOnu}
   </svg>`;
@@ -2478,7 +2485,7 @@ const CITV_VARIANTES = {
     infra: { infra: "CITV - SEM PORTAR ORIGINAL (OU FOTOCÓPIA/PLASTIFICADO)", amparo: "Art. 43 §3º XIX / §6º XXV", codigo: "93" },
     ficha: { ficha: 93, transpCodigo: "1319-2", transpAmparo: "Art. 43 §3º XIX", expedCodigo: "2225-4", expedAmparo: "Art. 43 §6º XXV",
       exemploObs: "Apresentou o CITV em fotocópia autenticada, não o original.",
-      notaExclusividade: "Vale também quando o CITV é apresentado plastificado ou em fotocópia (mesmo autenticada) — mesmo que a inspeção em si esteja dentro da validade. Se o documento foi apresentado (original) mas com outro problema, usar a variante específica." },
+      notaExclusividade: "Vale também quando o CITV é apresentado plastificado ou em fotocópia (mesmo autenticada) — mesmo que a inspeção em si esteja dentro da validade. Se o documento foi apresentado (original) mas com outra irregularidade, usar a variante específica." },
   },
   ilegivel: {
     infra: { infra: "CITV - ILEGÍVEL", amparo: "Art. 43 §2º VIII / §6º XXVII", codigo: "91" },
@@ -2952,7 +2959,7 @@ const FICHA_VEICULO_CARACTERISTICAS = {
   infra: { infra: "VEÍCULO - CARACTERÍSTICAS TÉCNICAS/OPERACIONAIS INADEQUADAS", amparo: "Art. 43 §2º III / §6º III", codigo: "80" },
   ficha: { ficha: 80, transpCodigo: "1203-0", transpAmparo: "Art. 43 §2º III", expedCodigo: "2203-0", expedAmparo: "Art. 43 §6º III",
     exemploObs: "Veículo com cronotacógrafo sem lacre e extintor de incêndio do veículo fora da validade.",
-    notaExclusividade: "Se a irregularidade for no EQUIPAMENTO (tanque/reboque), não no veículo, usar 'Vazamento' (Ficha 34) — se houver os dois problemas, marcar ambos os itens. A autuação por esta ficha (RTRPP) NÃO substitui eventual autuação de trânsito cabível — são cumulativas, quando ambas se aplicam." },
+    notaExclusividade: "Se a irregularidade for no EQUIPAMENTO (tanque/reboque), não no veículo, usar 'Vazamento' (Ficha 34) — se houver as duas irregularidades, marcar ambos os itens. A autuação por esta ficha (RTRPP) NÃO substitui eventual autuação de trânsito cabível — são cumulativas, quando ambas se aplicam." },
 };
 const VEICULO_EXCECOES_TRANSITO = [
   { v: "excesso_peso", t: "Excesso de peso (PBT/PBTC ou CMT acima do limite técnico)" },
@@ -3736,6 +3743,16 @@ function atualizarInfoBoxVarianteDocumento(id, motivo){
     const anchorBox = document.getElementById("variante_doc_box_"+id);
     if(anchorBox) anchorBox.insertAdjacentElement("afterend", infoBox);
   }
+  // Embalagens: 3 variantes específicas (identificação/homologação/selo
+  // conformidade) são dispensadas sob Quantidade Limitada por Embalagem
+  // Interna (Manual MPO-005, item 16.1.2) — outras variantes desse mesmo
+  // item (deteriorada, inadequada, etc.) continuam normais.
+  const VARIANTES_EMBALAGENS_DISPENSADAS_QL = ["sem_nenhuma_identificacao","sem_marcacao_un","sem_selo_conformidade"];
+  if(id === "embalagens" && VARIANTES_EMBALAGENS_DISPENSADAS_QL.includes(motivo) && document.getElementById("meta_quant_limitada_embalagem").checked){
+    infoBox.style.cssText = infoBox.style.cssText.replace(/background:[^;]+;?/, "background:#eef0f2;").replace(/border-left:[^;]+;?/, "border-left:4px solid #8a939c;");
+    infoBox.innerHTML = `<strong>Provavelmente não autuar.</strong> Essa variante está dispensada sob Quantidade Limitada por Embalagem Interna (Manual MPO-005, item 16.1.2) — confirme que o volume não excede 30kg e que o documento traz a expressão "quantidade limitada"/"QUANT. LTDA" antes de deixar de autuar.`;
+    return;
+  }
   // CETPP "vencido": por padrão não autua (Resolução CONTRAN 1.020/2025) —
   // mostra o aviso já no preenchimento, não só no resultado final.
   if(id === "cetpp" && motivo === "vencido"){
@@ -3846,7 +3863,7 @@ function atualizarInfoBoxSinalizacao(id){
     infoBox.innerHTML = `<strong>${inf.infra}</strong><br>Amparo: ${inf.amparo} — Ficha MPO-005 nº ${inf.codigo} — ${grupoTexto}`;
   } else {
     infoBox.style.cssText += "background:#f4f5f7;color:var(--texto-claro);";
-    infoBox.innerHTML = `<em>Selecione o tipo de problema acima.</em>`;
+    infoBox.innerHTML = `<em>Selecione o tipo de irregularidade acima.</em>`;
   }
 }
 
@@ -4060,7 +4077,7 @@ function limparFiltroEpi(){
 // a granel (tanque) esses itens não fazem sentido, e sim os itens
 // de documentação do equipamento (CIV/CTPP/CIPP na seção 3).
 // ============================================================
-const ITENS_SO_FRACIONADO = ["estiva","embalagens"];
+const ITENS_SO_FRACIONADO = ["estiva","embalagens","cofre_carga"];
 // Itens que só existem em transporte a GRANEL — confirmados contra a
 // lista FICHAS_DISPENSA_FRACIONADO do motor (não incluir aqui nada que
 // não esteja lá, senão a tela mostra "dispensado" mas o motor calcularia
@@ -4083,6 +4100,18 @@ const ITENS_DISPENSADOS_QUANT_LIMITADA = [
   "cetpp", "caronas",
   "capacete","luvas","oculos","pfacial","protetorfacial",
   "painelseg","rotulorisco","mambiente","tempalta",
+  "calcos","cones","alicate","chavebat",
+];
+
+// EMBALAGENS VAZIAS, NÃO LIMPAS (ONU 3509) — Manual MPO-005, item 14
+// (págs. 134-136). Diferente de "Quantidade Limitada": aqui Sinalização
+// e proibição de carona continuam EXIGIDOS — só dispensa EPI, ESE (exceto
+// extintor, que continua exigido) e CETPP. Detectado automaticamente
+// pelo próprio número do ONU informado, sem precisar marcar nenhuma
+// caixa em Situações Especiais.
+const ITENS_DISPENSADOS_ONU_3509 = [
+  "cetpp",
+  "capacete","luvas","oculos","pfacial","protetorfacial",
   "calcos","cones","alicate","chavebat",
 ];
 
@@ -4131,6 +4160,49 @@ function aplicarFiltroOutrosDocumentos(numerosOnu){
   }
 }
 
+// Quantidade Limitada POR EMBALAGEM INTERNA (Manual MPO-005, item 16.1.2)
+// — regime DIFERENTE do "por veículo": dispensa Segregação (item inteiro),
+// mas em Embalagens só dispensa 3 variantes específicas (identificação/
+// homologação/selo conformidade) — outras variantes desse mesmo item
+// continuam valendo, por isso não dá pra apagar o item "embalagens"
+// inteiro (ver aviso contextual em aplicarAvisoEmbalagemQuantLimitada).
+function aplicarFiltroQuantLimitadaEmbalagem(ativo){
+  const id = "produtos_incompativeis";
+  const opts = document.querySelector(`.opts[data-id="${id}"]`);
+  if(!opts) return;
+  const itemDiv = opts.closest(".item");
+  let tag = itemDiv.querySelector(".tag-quant-limitada-emb");
+  if(ativo){
+    const r = state.respostas[id];
+    if(r && r.manual){
+      if(tag) tag.remove();
+      itemDiv.style.opacity = "1";
+    } else {
+      if(!tag){
+        tag = document.createElement("span");
+        tag.className = "tag-quant-limitada-emb";
+        tag.textContent = "Dispensado — Quantidade Limitada por Embalagem Interna";
+        tag.style.cssText = "display:inline-block;margin-top:4px;margin-left:4px;font-size:11px;font-weight:600;color:#8a6d1a;background:#fff3cd;padding:2px 8px;border-radius:10px;";
+        itemDiv.querySelector(".item-title").insertAdjacentElement("afterend", tag);
+      }
+      itemDiv.style.opacity = "0.55";
+      state.respostas[id] = state.respostas[id] || {};
+      state.respostas[id].valor = "NA";
+      opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-val")==="NA"));
+      const obsEl = document.getElementById("obs_"+id);
+      if(obsEl) obsEl.classList.remove("show");
+    }
+  } else {
+    if(tag) tag.remove();
+    itemDiv.style.opacity = "1";
+    const r = state.respostas[id];
+    if(r && r.valor === "NA" && !r.manual){
+      delete state.respostas[id];
+      opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.remove("active"));
+    }
+  }
+}
+
 function aplicarFiltroTransporteInternacional(ativo){
   const id = "citv";
   const opts = document.querySelector(`.opts[data-id="${id}"]`);
@@ -4161,6 +4233,64 @@ function aplicarFiltroTransporteInternacional(ativo){
     if(tag) tag.remove();
     itemDiv.style.opacity = "1";
   }
+}
+
+// Detecta se ONU 3509 está entre os produtos informados, e dispensa
+// automaticamente EPI, ESE (exceto extintor) e CETPP — igual à ideia da
+// Quantidade Limitada, mas SEM dispensar Sinalização nem proibição de
+// carona (esses continuam exigidos pra embalagem vazia não limpa,
+// conforme a tabela do item 14 do Manual). Não precisa de checkbox —
+// já é automático a partir do próprio número do ONU digitado.
+// Mostra, no painel geral do ONU, a tabela completa de dispensas do
+// ONU 3509 (Manual MPO-005, item 14, págs. 134-136) -- inclui as que o
+// app já dispensa automaticamente (EPI/ESE/CETPP) E as 3 que não têm
+// item de checklist correspondente hoje (marcação de homologação, marca
+// de conformidade na embalagem, quantidade total no documento) — essas
+// 3 o fiscal precisa lembrar manualmente, o app não marca nada sozinho.
+function montarNotaOnu3509(numerosOnu){
+  const temOnu3509 = numerosOnu.map(n=>parseInt(n,10)).includes(3509);
+  if(!temOnu3509) return "";
+  return `<div style="margin-top:6px;padding:6px 8px;background:#eef5ff;border-left:3px solid var(--azul-prf);font-size:12px;">📦 <strong>ONU 3509 — Embalagem Vazia Não Limpa (Manual MPO-005, item 14):</strong> app já dispensou automaticamente EPI, ESE (exceto extintor) e CETPP. Continuam <strong>exigidos</strong>: Sinalização, proibição de carona, extintor, DoCPP, precauções de manuseio/estiva, segregação, empilhamento — e a identificação do volume (ONU/nome/rótulo) deve ser a do produto ORIGINALMENTE contido. Também estão <strong>dispensados</strong> (sem item de checklist específico pra isso hoje): marcação de homologação, marca de conformidade na embalagem, e quantidade total de cada produto no documento de transporte.</div>`;
+}
+
+function aplicarFiltroOnu3509(numerosOnu){
+  numerosOnu = numerosOnu || [];
+  const ativo = numerosOnu.map(n=>parseInt(n,10)).includes(3509);
+  ITENS_DISPENSADOS_ONU_3509.forEach(id=>{
+    const opts = document.querySelector(`.opts[data-id="${id}"]`);
+    if(!opts) return;
+    const itemDiv = opts.closest(".item");
+    let tag = itemDiv.querySelector(".tag-onu-3509");
+    if(ativo){
+      const r = state.respostas[id];
+      if(r && r.manual){
+        if(tag) tag.remove();
+        itemDiv.style.opacity = "1";
+      } else {
+        if(!tag){
+          tag = document.createElement("span");
+          tag.className = "tag-onu-3509";
+          tag.textContent = "Dispensado — ONU 3509 (embalagem vazia não limpa)";
+          tag.style.cssText = "display:inline-block;margin-top:4px;margin-left:4px;font-size:11px;font-weight:600;color:#8a6d1a;background:#fff3cd;padding:2px 8px;border-radius:10px;";
+          itemDiv.querySelector(".item-title").insertAdjacentElement("afterend", tag);
+        }
+        itemDiv.style.opacity = "0.55";
+        state.respostas[id] = state.respostas[id] || {};
+        state.respostas[id].valor = "NA";
+        opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-val")==="NA"));
+        const obsEl = document.getElementById("obs_"+id);
+        if(obsEl) obsEl.classList.remove("show");
+      }
+    } else {
+      if(tag) tag.remove();
+      itemDiv.style.opacity = "1";
+      const r = state.respostas[id];
+      if(r && r.valor === "NA" && !r.manual){
+        delete state.respostas[id];
+        opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.remove("active"));
+      }
+    }
+  });
 }
 
 function aplicarFiltroQuantLimitada(ativo){
@@ -4552,7 +4682,7 @@ function buildForm(){
                 <select id="select_sinal_situacao_${id}" style="width:100%;padding:6px;border:1px solid var(--cinza-borda);border-radius:4px;font-size:12px;">
                   <option value="">Selecione...</option>
                   <option value="ausente">Ausente (não está presente)</option>
-                  <option value="com_problema">Existe, mas com problema</option>
+                  <option value="com_problema">Existe, mas há irregularidades</option>
                 </select>
                 <div id="sinal_subvariante_box_${id}" style="margin-top:6px;"></div>`;
               obsInput.insertAdjacentElement("afterend", sinalBox);
@@ -4562,7 +4692,7 @@ function buildForm(){
                 const divSub = document.getElementById(`sinal_subvariante_box_${id}`);
                 if(situacao === "com_problema"){
                   const opcoesHtml = SINALIZACAO_SUBVARIANTES_OPCOES.map(m=>`<option value="${m.v}">${m.t}</option>`).join("");
-                  divSub.innerHTML = `<label style="font-weight:600;display:block;margin-bottom:4px;">Qual o tipo de problema?</label>
+                  divSub.innerHTML = `<label style="font-weight:600;display:block;margin-bottom:4px;">Qual o tipo de irregularidade?</label>
                     <select id="select_sinal_sub_${id}" style="width:100%;padding:6px;border:1px solid var(--cinza-borda);border-radius:4px;font-size:12px;">
                       <option value="">Selecione...</option>
                       ${opcoesHtml}
@@ -4813,6 +4943,7 @@ function collectMeta(){
     })(),
     carga_propria: document.getElementById("meta_carga_propria").checked,
     quant_limitada: document.getElementById("meta_quant_limitada").checked,
+    quant_limitada_embalagem: document.getElementById("meta_quant_limitada_embalagem").checked,
     transporte_internacional: document.getElementById("meta_transporte_internacional").checked,
   };
 }
@@ -4831,6 +4962,7 @@ function applyMeta(){
   atualizarVisibilidadeCertificadoDescontaminacao();
   document.getElementById("meta_carga_propria").checked = !!state.meta.carga_propria;
   document.getElementById("meta_quant_limitada").checked = !!state.meta.quant_limitada;
+  document.getElementById("meta_quant_limitada_embalagem").checked = !!state.meta.quant_limitada_embalagem;
   document.getElementById("meta_transporte_internacional").checked = !!state.meta.transporte_internacional;
 }
 
@@ -4870,6 +5002,7 @@ function loadDraft(){
       validarOnu();
       if(state.meta.tipo_carga) aplicarFiltroCarga(state.meta.tipo_carga);
       if(state.meta.quant_limitada) aplicarFiltroQuantLimitada(true);
+      if(state.meta.quant_limitada_embalagem) aplicarFiltroQuantLimitadaEmbalagem(true);
       aplicarFiltroTransporteInternacional(!!state.meta.transporte_internacional);
 
       // Recria as caixas dinâmicas (variante de documento, situação de EPI/
@@ -5653,7 +5786,7 @@ function validarOnu(){
   const box = document.getElementById("onuValidacao");
   const raw = document.getElementById("meta_onu").value.trim();
   const numeros = raw.split(/[,;\s]+/).map(s=>s.replace(/\D/g,"")).filter(Boolean);
-  if(numeros.length === 0){ box.style.display="none"; window.ultimoPainelOnuHtml = ""; const bd = document.getElementById("onuValidacaoDashboard"); if(bd){ bd.innerHTML=""; bd.style.display="none"; } limparFiltroEpi(); aplicarFiltroSinalizacaoEspecial([]); aplicarAvisoProvisao274([]); aplicarAvisoExtintor([]); aplicarAvisoRotuloAdicional([]); aplicarNotaQuantLimitada([]); aplicarFiltroOutrosDocumentos([]); aplicarModeloPainelSeguranca([]); return; }
+  if(numeros.length === 0){ box.style.display="none"; window.ultimoPainelOnuHtml = ""; const bd = document.getElementById("onuValidacaoDashboard"); if(bd){ bd.innerHTML=""; bd.style.display="none"; } limparFiltroEpi(); aplicarFiltroSinalizacaoEspecial([]); aplicarAvisoProvisao274([]); aplicarAvisoExtintor([]); aplicarAvisoRotuloAdicional([]); aplicarNotaQuantLimitada([]); aplicarFiltroOutrosDocumentos([]); aplicarModeloPainelSeguranca([]); aplicarFiltroOnu3509([]); return; }
   let html = "";
   let htmlDashboard = "";
   let gruposEncontrados = [];
@@ -5734,8 +5867,10 @@ function validarOnu(){
   // tudo, incluindo o Extintor. O dashboard NÃO mostra o Extintor — essa
   // info já aparece no item específico (seção ESE), então repetir ali
   // seria redundante e ocuparia espaço à toa na tela inicial.
-  window.ultimoPainelOnuHtml = html + notaCargaMistaHtml + notaQuantLimitadaHtml;
-  const painelDashboardHtml = htmlDashboard + notaCargaMistaHtml + notaQuantLimitadaHtml;
+  const notaOnu3509Html = montarNotaOnu3509(numeros);
+  box.innerHTML += notaOnu3509Html;
+  window.ultimoPainelOnuHtml = html + notaCargaMistaHtml + notaQuantLimitadaHtml + notaOnu3509Html;
+  const painelDashboardHtml = htmlDashboard + notaCargaMistaHtml + notaQuantLimitadaHtml + notaOnu3509Html;
   const boxDashboard = document.getElementById("onuValidacaoDashboard");
   if(boxDashboard){
     if(painelDashboardHtml){
@@ -5752,6 +5887,7 @@ function validarOnu(){
   aplicarAvisoRotuloAdicional(numeros);
   aplicarFiltroOutrosDocumentos(numeros);
   aplicarModeloPainelSeguranca(numeros);
+  aplicarFiltroOnu3509(numeros);
 }
 
 // ============================================================
@@ -5809,6 +5945,10 @@ document.getElementById("meta_quant_limitada").addEventListener("change", (e)=>{
   if(onuConfirmado){
     validarOnu();
   }
+});
+document.getElementById("meta_quant_limitada_embalagem").addEventListener("change", (e)=>{
+  aplicarFiltroQuantLimitadaEmbalagem(e.target.checked);
+  persistDraft();
 });
 document.getElementById("meta_carga_propria").addEventListener("change", persistDraft);
 document.getElementById("meta_transporte_internacional").addEventListener("change", (e)=>{
