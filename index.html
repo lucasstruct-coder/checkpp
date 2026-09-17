@@ -977,7 +977,7 @@ function montarTextoSvgPainel(texto, xCentro, yCentro, alturaFonte, cor){
   let partes = "";
   chars.forEach(c => {
     const g = FONTE_PAINEL_SEGURANCA[c];
-    partes += `<path d="${g.d}" fill="${cor}" transform="translate(${xAtual},${yOffset}) scale(${escala})"/>`;
+    partes += `<path d="${g.d}" fill="${cor}" fill-rule="nonzero" transform="translate(${xAtual},${yOffset}) scale(${escala})"/>`;
     xAtual += g.w * escala + espacamento;
   });
   return partes;

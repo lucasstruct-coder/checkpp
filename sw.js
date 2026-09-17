@@ -4,7 +4,7 @@
 // ícones. Sempre que publicar uma versão nova, aumente o número da
 // versão abaixo (CACHE_NOME) — isso força os usuários a baixarem a
 // versão atualizada na próxima vez que abrirem o app.
-const CACHE_NOME = "checklist-pp-v4";
+const CACHE_NOME = "checklist-pp-v5";
 const ARQUIVOS_PARA_CACHE = [
   "./",
   "./index.html",
