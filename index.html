@@ -487,10 +487,10 @@
       <div class="field"><label>Data</label><input type="date" id="meta_data"></div>
       <div class="field"><label>Hora</label><input type="time" id="meta_hora"></div>
       <div class="field"><label>UOP</label><input type="text" id="meta_uop"></div>
-      <div class="field"><label>Placa (Cavalo)</label><input type="text" id="meta_placa"></div>
-      <div class="field"><label>Semirreboque(s)</label><input type="text" id="meta_semi"></div>
+      <div class="field"><label>Placa (Cavalo)</label><input type="text" id="meta_placa" style="text-transform:uppercase;" maxlength="8"></div>
+      <div class="field"><label>Semirreboque(s)</label><input type="text" id="meta_semi" style="text-transform:uppercase;"></div>
       <div class="field">
-        <label>Tipo de Carga *</label>
+        <label style="color:#c0392b;">Tipo de Carga *</label>
         <select id="meta_tipo_carga" class="req-field">
           <option value="">Selecione</option>
           <option value="Granel">Granel</option>
@@ -498,7 +498,7 @@
         </select>
       </div>
       <div class="field">
-        <label>Produtos (ONU) *</label>
+        <label style="color:#c0392b;">Produtos (ONU) *</label>
         <div style="display:flex;gap:8px;align-items:stretch;">
           <input type="text" id="meta_onu" placeholder="ex: 1203" class="req-field" style="flex:1;">
           <button type="button" id="btnConfirmarOnu" title="Consultar produto" aria-label="Consultar produto" style="flex-shrink:0;width:42px;border-radius:6px;border:1px solid var(--azul-prf);background:var(--azul-prf);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
@@ -517,7 +517,7 @@
         </div>
       </div>
       <div class="field">
-        <label>Estado do Veículo *</label>
+        <label style="color:#c0392b;">Estado do Veículo *</label>
         <select id="meta_estado_veiculo" class="req-field">
           <option value="">Selecione...</option>
           <option value="carregado">Carregado</option>
@@ -526,7 +526,7 @@
         </select>
         <small style="display:block;margin-top:4px;font-size:11px;color:var(--texto-claro);">Afeta quem responde pela infração (Transportador/Expedidor) — detalhes aparecem no resultado, item por item, quando relevante.</small>
         <div id="certificado_descontaminacao_box" style="display:none;margin-top:8px;">
-          <label style="font-size:12px;">Certificado de descontaminação (Portaria Inmetro 445/21) dentro da validade? *</label>
+          <label style="font-size:12px;color:#c0392b;">Certificado de descontaminação (Portaria Inmetro 445/21) dentro da validade? *</label>
           <select id="meta_certificado_descontaminacao_valido" class="req-field-condicional">
             <option value="">Selecione...</option>
             <option value="sim">Sim, válido</option>
@@ -708,7 +708,7 @@ const SECTIONS = [
     { id: "capacete", nome: "Capacete", desc: "Com CA, na validade e em bom estado?" },
     { id: "luvas", nome: "Luvas", desc: "Com CA, na validade, em bom estado e compatível com o produto?" },
     { id: "oculos", nome: "Óculos", desc: "Ampla visão, com CA, na validade e em bom estado?" },
-    { id: "pfacial", nome: "P. Facial", desc: "Inteira (Grupos 4/5) ou Semi (Grupos 6/7)? Com CA, na validade e em bom estado?" },
+    { id: "pfacial", nome: "Máscara Respiratória (Inteira/Semifacial)", desc: "Inteira (Grupos 4/5) ou Semi (Grupos 6/7)? Com CA, na validade e em bom estado?" },
     { id: "protetorfacial", nome: "Protetor Facial", desc: "Com CA, na validade e em bom estado?" },
   ]},
   { title: "3. Documentação (Veículo/Equipamento/Carga)", items: [
@@ -2408,11 +2408,11 @@ const INFRACOES = {
   rotulorisco:    { infra: "SINALIZAÇÃO INCORRETA", amparo: "Art. 43 §2º II / §6º II", codigo: "70", gravidade: "Gravíssima" },
   mambiente:      { infra: "SINALIZAÇÃO INCOMPLETA", amparo: "Art. 43 §3º I / §7º I", codigo: "69", gravidade: "Grave" },
   tempalta:       { infra: "SINALIZAÇÃO AFIXADA DE FORMA INADEQUADA", amparo: "Art. 43 §3º I / §7º I", codigo: "66", gravidade: "Grave" },
-  calcos:         { infra: "ESE INCOMPLETO", amparo: "Art. 43 §4º IV / §7º III", codigo: "45", gravidade: "Média" },
-  cones:          { infra: "ESE INCOMPLETO", amparo: "Art. 43 §4º IV / §7º III", codigo: "45", gravidade: "Média" },
+  calcos:         { infra: "ESE INADEQUADO", amparo: "Art. 43 §3º IV / §6º VI", codigo: "43", gravidade: "Grave" },
+  cones:          { infra: "ESE INADEQUADO", amparo: "Art. 43 §3º IV / §6º VI", codigo: "43", gravidade: "Grave" },
   extintor:       { infra: "ESE INADEQUADO", amparo: "Art. 43 §3º IV / §6º VI", codigo: "43", gravidade: "Grave" },
-  alicate:        { infra: "ESE INCOMPLETO", amparo: "Art. 43 §4º IV / §7º III", codigo: "45", gravidade: "Média" },
-  chavebat:       { infra: "ESE INCOMPLETO", amparo: "Art. 43 §4º IV / §7º III", codigo: "45", gravidade: "Média" },
+  alicate:        { infra: "ESE INADEQUADO", amparo: "Art. 43 §3º IV / §6º VI", codigo: "43", gravidade: "Grave" },
+  chavebat:       { infra: "ESE INADEQUADO", amparo: "Art. 43 §3º IV / §6º VI", codigo: "43", gravidade: "Grave" },
   caronas:        { infra: "CONDUZIR PESSOAS (CARONA)", amparo: "Art. 43 §3º XII", codigo: "53", gravidade: "Grave" },
   animais:        { infra: "PP COM ANIMAIS", amparo: "Art. 43 §2º XVI / §6º XXI", codigo: "58", gravidade: "Gravíssima" },
   alimento:       { infra: "PP COM ALIMENTOS, MEDICAMENTOS, INSUMOS, ADITIVOS...", amparo: "Art. 43 §2º XV / §6º XIX", codigo: "57", gravidade: "Gravíssima" },
@@ -3626,11 +3626,11 @@ const FICHAS_M005 = {
   rotulorisco: { ficha: 70, transpCodigo: '1202-1', transpAmparo: 'Art. 43 §2º II', expedCodigo: '2202-1', expedAmparo: 'Art. 43 §6º II', exemploObs: 'veículo sinalizado com símbolo de substâncias que apresentam risco ao meio ambiente sem transportar produtos ONU 3082 ou 3077', notaExclusividade: 'Se, além de incorreta, a sinalização também estiver ilegível, usar SOMENTE o código combinado específico — não dois autos separados.' },
   mambiente: { ficha: 69, transpCodigo: '1301-1', transpAmparo: 'Art. 43 §3º I', expedCodigo: '2301-1', expedAmparo: 'Art. 43 §7º I', exemploObs: 'veículo transportando vários produtos da classe de risco 3, sem estar sinalizado por rótulos de risco', notaExclusividade: 'Se o veículo estiver SEM NENHUMA sinalização (não apenas incompleta), usar o código específico de \'sem sinalização\' — não este.' },
   tempalta: { ficha: 66, transpCodigo: '1301-2', transpAmparo: 'Art. 43 §3º I', expedCodigo: '2301-2', expedAmparo: 'Art. 43 §7º I', expedAplicabilidade: { estados: ["carregado"] }, exemploObs: 'Painel de segurança dianteiro no lado direito (lado do passageiro)', notaExclusividade: 'Se o veículo estiver SEM NENHUMA sinalização (não apenas afixada de forma inadequada), usar o código específico de \'sem sinalização\' — não este.' },
-  calcos: { ficha: 45, transpCodigo: '1404-0', transpAmparo: 'Art. 43 §4º IV', expedCodigo: '2303-0', expedAmparo: 'Art. 43 §7º III', exemploObs: 'Apresentou apenas três dos quatro cones para sinalização da Via', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar incompleto), usar o código específico de \'Sem ESE\' — não este.' },
-  cones: { ficha: 45, transpCodigo: '1404-0', transpAmparo: 'Art. 43 §4º IV', expedCodigo: '2303-0', expedAmparo: 'Art. 43 §7º III', exemploObs: 'Apresentou apenas três dos quatro cones para sinalização da Via', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar incompleto), usar o código específico de \'Sem ESE\' — não este.' },
+  calcos: { ficha: 43, transpCodigo: '1304-0', transpAmparo: 'Art. 43 §3º IV', expedCodigo: '2206-0', expedAmparo: 'Art. 43 §6º VI', exemploObs: 'Calço apresentado rachado, sem condições de uso seguro', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar inadequado), usar o código específico de \'Sem ESE\' — não este.' },
+  cones: { ficha: 43, transpCodigo: '1304-0', transpAmparo: 'Art. 43 §3º IV', expedCodigo: '2206-0', expedAmparo: 'Art. 43 §6º VI', exemploObs: 'Cone de sinalização apresentado quebrado/deformado, sem condições de uso', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar inadequado), usar o código específico de \'Sem ESE\' — não este.' },
   extintor: { ficha: 43, transpCodigo: '1304-0', transpAmparo: 'Art. 43 §3º IV', expedCodigo: '2206-0', expedAmparo: 'Art. 43 §6º VI', exemploObs: 'extintor de incêndio acondicionado junto à válvula de descarga do equipamento', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas o extintor inadequado), usar o código específico de \'Sem ESE\' — não este.' },
-  alicate: { ficha: 45, transpCodigo: '1404-0', transpAmparo: 'Art. 43 §4º IV', expedCodigo: '2303-0', expedAmparo: 'Art. 43 §7º III', exemploObs: 'Apresentou apenas três dos quatro cones para sinalização da Via', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar incompleto), usar o código específico de \'Sem ESE\' — não este.' },
-  chavebat: { ficha: 45, transpCodigo: '1404-0', transpAmparo: 'Art. 43 §4º IV', expedCodigo: '2303-0', expedAmparo: 'Art. 43 §7º III', exemploObs: 'Apresentou apenas três dos quatro cones para sinalização da Via', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar incompleto), usar o código específico de \'Sem ESE\' — não este.' },
+  alicate: { ficha: 43, transpCodigo: '1304-0', transpAmparo: 'Art. 43 §3º IV', expedCodigo: '2206-0', expedAmparo: 'Art. 43 §6º VI', exemploObs: 'Alicate isolante apresentado com cabo danificado, sem isolamento adequado', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar inadequado), usar o código específico de \'Sem ESE\' — não este.' },
+  chavebat: { ficha: 43, transpCodigo: '1304-0', transpAmparo: 'Art. 43 §3º IV', expedCodigo: '2206-0', expedAmparo: 'Art. 43 §6º VI', exemploObs: 'Chave de desconexão de bateria apresentada quebrada, sem condições de uso', notaExclusividade: 'Se FALTAR TODO o conjunto de ESE (não apenas estar inadequado), usar o código específico de \'Sem ESE\' — não este.' },
   caronas: { ficha: 53, transpCodigo: '1312-0', transpAmparo: 'Art. 43 §3º XII', expedCodigo: null, expedAmparo: null, exemploObs: 'Transitava conduzindo passageiro (Sr. fulano de tal, RG xxxx) que se verificou não se tratar de auxiliar.', notaExclusividade: 'Em transporte fracionado dentro da quantidade limitada por veículo, a carona passa a ser permitida (não autuar por este item). Mas se a carona estiver sem o traje mínimo obrigatório, autuar pela Ficha 79 (TMO), não por esta.' },
   animais: { ficha: 58, transpCodigo: '1216-0', transpAmparo: 'Art. 43 §2º XVI', expedCodigo: '2221-0', expedAmparo: 'Art. 43 §6º XXI', exemploObs: 'Transportava frango para abate no compartimento de carga.', notaExclusividade: 'O transporte simultâneo de animais e produtos perigosos permanece proibido mesmo que haja segregação do produto perigoso por cofre de carga.' },
   alimento: { ficha: 57, transpCodigo: '1215-1', transpAmparo: 'Art. 43 §2º XV', expedCodigo: '2219-1', expedAmparo: 'Art. 43 §6º XIX', exemploObs: 'Transportando produto ONU 1170 juntamente com alimentos, conforme Danfe nº xxx', notaExclusividade: 'Se os produtos estiverem segregados em cofre de carga INADEQUADO, usar o código específico de cofre inadequado — não este. Sempre que possível, acionar Vigilância Sanitária ou MAPA. ⚠ Mesmo com cofre de carga ADEQUADO (estanque), AUTUAR se o produto perigoso for: tóxico subclasse 6.1 Grupo de Embalagem I, explosivo Classe 1, ou radioativo Classe 7 — pra esses 3, a segregação por cofre não afasta a infração.' },
@@ -4059,6 +4059,19 @@ function atualizarInfoBoxRetiradaSinalizacao(){
   }
 }
 
+// Nomes de TODAS as classes de tarja de dispensa automática usadas no
+// app — usado pra evitar que um filtro "atropele" o trabalho de outro
+// quando os dois disputam o mesmo item (ex: EPI dispensa um item por
+// causa do ONU, mas Quantidade Limitada, ao ser desmarcada, reseta a
+// opacidade de volta sem saber que o EPI ainda quer esse item como N/A).
+const TODAS_CLASSES_TAG_DISPENSA = [
+  "tag-nao-exigido", "tag-nao-exigido-tipocarga", "tag-onu-3509", "tag-outros-documentos",
+  "tag-quant-limitada", "tag-quant-limitada-emb", "tag-transp-internacional",
+];
+function outroFiltroAindaDispensa(itemDiv, tagClassePropria){
+  return TODAS_CLASSES_TAG_DISPENSA.some(classe => classe !== tagClassePropria && itemDiv.querySelector(`.${classe}`));
+}
+
 function aplicarFiltroEpi(grupoOuLista){
   const listaGrupos = Array.isArray(grupoOuLista) ? grupoOuLista : [grupoOuLista];
   const exigidos = new Set();
@@ -4270,9 +4283,11 @@ function aplicarFiltroQuantLimitadaEmbalagem(ativo){
     }
   } else {
     if(tag) tag.remove();
-    itemDiv.style.opacity = "1";
+    if(!outroFiltroAindaDispensa(itemDiv, "tag-quant-limitada-emb")){
+      itemDiv.style.opacity = "1";
+    }
     const r = state.respostas[id];
-    if(r && r.valor === "NA" && !r.manual){
+    if(r && r.valor === "NA" && !r.manual && !outroFiltroAindaDispensa(itemDiv, "tag-quant-limitada-emb")){
       delete state.respostas[id];
       opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.remove("active"));
     }
@@ -4359,9 +4374,11 @@ function aplicarFiltroOnu3509(numerosOnu){
       }
     } else {
       if(tag) tag.remove();
-      itemDiv.style.opacity = "1";
+      if(!outroFiltroAindaDispensa(itemDiv, "tag-onu-3509")){
+        itemDiv.style.opacity = "1";
+      }
       const r = state.respostas[id];
-      if(r && r.valor === "NA" && !r.manual){
+      if(r && r.valor === "NA" && !r.manual && !outroFiltroAindaDispensa(itemDiv, "tag-onu-3509")){
         delete state.respostas[id];
         opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.remove("active"));
       }
@@ -4396,13 +4413,12 @@ function aplicarFiltroQuantLimitada(ativo){
       }
     } else {
       if(tag) tag.remove();
-      itemDiv.style.opacity = "1";
-      // Só reverte a resposta se NENHUM outro filtro (ex: ONU/EPI) ainda
-      // quiser esse item como N/A — evita um filtro "atropelar" o outro
-      // quando os dois dispensam o mesmo item ao mesmo tempo.
-      const aindaDispensadoPeloOnu = EPI_ITEMS.includes(id) && document.getElementById("meta_onu").value.trim() !== "" && !epiExigidosAtuais.includes(id);
+      const aindaDispensado = outroFiltroAindaDispensa(itemDiv, "tag-quant-limitada");
+      if(!aindaDispensado){
+        itemDiv.style.opacity = "1";
+      }
       const r = state.respostas[id];
-      if(r && r.valor === "NA" && !r.manual && !aindaDispensadoPeloOnu){
+      if(r && r.valor === "NA" && !r.manual && !aindaDispensado){
         delete state.respostas[id];
         opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.remove("active"));
         const obsInput = document.getElementById("obs_"+id);
@@ -4432,7 +4448,7 @@ function aplicarDispensaPorTipoCarga(lista, deveDispensar, textoTag){
     const opts = document.querySelector(`.opts[data-id="${id}"]`);
     if(!opts) return;
     const itemDiv = opts.closest(".item");
-    let tag = itemDiv.querySelector(".tag-nao-exigido");
+    let tag = itemDiv.querySelector(".tag-nao-exigido-tipocarga");
     if(deveDispensar){
       const r = state.respostas[id];
       if(r && r.manual){
@@ -4441,7 +4457,7 @@ function aplicarDispensaPorTipoCarga(lista, deveDispensar, textoTag){
       } else {
         if(!tag){
           tag = document.createElement("span");
-          tag.className = "tag-nao-exigido";
+          tag.className = "tag-nao-exigido-tipocarga";
           tag.textContent = textoTag;
           tag.style.cssText = "display:inline-block;margin-top:4px;font-size:11px;font-weight:600;color:#8a939c;background:#eef0f2;padding:2px 8px;border-radius:10px;";
           itemDiv.querySelector(".item-title").insertAdjacentElement("afterend", tag);
@@ -4455,13 +4471,16 @@ function aplicarDispensaPorTipoCarga(lista, deveDispensar, textoTag){
       }
     } else {
       if(tag) tag.remove();
-      itemDiv.style.opacity = "1";
+      const aindaDispensado = outroFiltroAindaDispensa(itemDiv, "tag-nao-exigido-tipocarga");
+      if(!aindaDispensado){
+        itemDiv.style.opacity = "1";
+      }
       // BUG CORRIGIDO: reverter também precisa limpar a resposta "NA"
       // automática (mesma classe do bug já corrigido no filtro de EPI) —
       // senão o item volta a ficar visualmente normal, mas com a resposta
       // travada em NA até o fiscal clicar em algo manualmente.
       const r = state.respostas[id];
-      if(r && r.valor === "NA" && !r.manual){
+      if(r && r.valor === "NA" && !r.manual && !aindaDispensado){
         delete state.respostas[id];
         opts.querySelectorAll(".opt-btn").forEach(b=>b.classList.remove("active"));
       }
@@ -6120,6 +6139,16 @@ function confirmarOnu(){
   persistDraft();
 }
 document.getElementById("btnConfirmarOnu").addEventListener("click", confirmarOnu);
+document.getElementById("meta_placa").addEventListener("input", (e)=>{
+  const pos = e.target.selectionStart;
+  e.target.value = e.target.value.toUpperCase();
+  e.target.setSelectionRange(pos, pos);
+});
+document.getElementById("meta_semi").addEventListener("input", (e)=>{
+  const pos = e.target.selectionStart;
+  e.target.value = e.target.value.toUpperCase();
+  e.target.setSelectionRange(pos, pos);
+});
 document.getElementById("btnToggleSituacoesEspeciais").addEventListener("click", ()=>{
   const conteudo = document.getElementById("situacoesEspeciaisConteudo");
   const seta = document.getElementById("setaSituacoesEspeciais");
