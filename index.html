@@ -508,14 +508,6 @@
         <small id="onuStatusPendente" style="display:none;margin-top:4px;font-size:11px;color:#a15c00;">⚠ toque na lupa para consultar</small>
         <small style="display:block;margin-top:4px;font-size:11px;color:var(--texto-claro);">Mais de um produto? Digite separados por vírgula ou espaço (ex: 1203, 1830). O app ajusta os EPIs exigidos automaticamente.</small>
       </div>
-      <div class="field" style="grid-column:1/-1;">
-        <button type="button" id="btnToggleInfoFDS" style="background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;">📋 "Não é PP" foi alegado na abordagem? Veja como confirmar</button>
-        <div id="infoFDS" style="display:none;margin-top:6px;padding:8px 10px;background:#eef5ff;border-left:3px solid var(--azul-prf);border-radius:4px;font-size:12px;line-height:1.5;">
-          <strong>FDS (Ficha de Dados de Segurança), Seção 14:</strong> traz a classificação do produto pros modais de transporte — é a fonte pra confirmar se um produto é ou não PP, em caso de dúvida ou alegação em campo.
-          <br><br>
-          <strong>Nem todo produto químico perigoso é PP pra transporte</strong> — a classificação é sobre o risco NA OPERAÇÃO, não sobre a periculosidade geral. Ex: óleo lubrificante <u>novo</u> é tóxico, mas não é PP. Óleo <u>usado</u> já é PP (ONU 3082).
-        </div>
-      </div>
       <div class="field">
         <label style="color:#c0392b;">Estado do Veículo *</label>
         <select id="meta_estado_veiculo" class="req-field">
@@ -532,6 +524,14 @@
             <option value="sim">Sim, válido</option>
             <option value="nao">Não possui / vencido</option>
           </select>
+        </div>
+      </div>
+      <div class="field" style="grid-column:1/-1;">
+        <button type="button" id="btnToggleInfoFDS" style="background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;">📋 "Não é PP" foi alegado na abordagem? Veja como confirmar</button>
+        <div id="infoFDS" style="display:none;margin-top:6px;padding:8px 10px;background:#eef5ff;border-left:3px solid var(--azul-prf);border-radius:4px;font-size:12px;line-height:1.5;">
+          <strong>FDS (Ficha de Dados de Segurança), Seção 14:</strong> traz a classificação do produto pros modais de transporte — é a fonte pra confirmar se um produto é ou não PP, em caso de dúvida ou alegação em campo.
+          <br><br>
+          <strong>Nem todo produto químico perigoso é PP pra transporte</strong> — a classificação é sobre o risco NA OPERAÇÃO, não sobre a periculosidade geral. Ex: óleo lubrificante <u>novo</u> é tóxico, mas não é PP. Óleo <u>usado</u> já é PP (ONU 3082).
         </div>
       </div>
     </div>
