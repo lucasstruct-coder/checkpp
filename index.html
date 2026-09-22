@@ -711,8 +711,8 @@ const SECTIONS = [
     { id: "acesso", nome: "Acesso", desc: "Todos os EPIs estão agrupados e dentro da cabine?" },
     { id: "capacete", nome: "Capacete", desc: "Proteção da cabeça — casco rígido + suspensão (Manual MPO-005, item 9.8). Com CA, na validade e em bom estado?" },
     { id: "luvas", nome: "Luvas", desc: "Proteção das mãos, pulsos e braços contra agentes químicos/físicos (látex, nitrílicas, PVA, butílicas, raspa etc — Manual MPO-005, item 9.8). Com CA, na validade, em bom estado e compatível com o produto?" },
-    { id: "oculos", nome: "Óculos", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). ⚠ PREVALÊNCIA (item 9.4): em carga mista, se o motorista já porta a peça facial INTEIRA (que cobre os olhos) exigida por outro produto do mesmo carregamento, ela substitui os óculos — não cobre autuar por falta deste item nesse caso. Ampla visão, com CA, na validade e em bom estado?" },
-    { id: "pfacial", nome: "Máscara Respiratória (Inteira/Semifacial)", desc: "Peça Facial INTEIRA (cobre boca, nariz e olhos) — Grupo 4: filtro CO; Grupo 5: filtro SO2 (+ filtro mecânico nos dois). Peça SEMIFACIAL (cobre nariz e boca, apoia sob o queixo) — Grupo 6: filtro VO/GA; Grupo 7: filtro NH3 (+ filtro mecânico nos dois) — Manual MPO-005, item 9.8/9.3. ⚠ PREVALÊNCIA (item 9.4): em carga mista com produtos de grupos de EPI diferentes, a peça facial INTEIRA prevalece sobre a semifacial e/ou óculos — se o motorista já porta a inteira (do produto mais exigente), não cobre autuar por falta de semifacial/óculos de outro produto do mesmo carregamento. Com CA, na validade e em bom estado?" },
+    { id: "oculos", nome: "Óculos", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). <button type=\"button\" onclick=\"toggleDetalheItem(this,'prevalencia_oculos')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">⚠ Ver regra de prevalência (carga mista) ▸</button><div id=\"detalhe_prevalencia_oculos\" style=\"display:none;margin-top:4px;\">PREVALÊNCIA (item 9.4): em carga mista, se o motorista já porta a peça facial INTEIRA (que cobre os olhos) exigida por outro produto do mesmo carregamento, ela substitui os óculos — não cabe autuar por falta deste item nesse caso.</div> Ampla visão, com CA, na validade e em bom estado?" },
+    { id: "pfacial", nome: "Máscara Respiratória (Inteira/Semifacial)", desc: "Peça Facial INTEIRA (cobre boca, nariz e olhos) — Grupo 4: filtro CO; Grupo 5: filtro SO2 (+ filtro mecânico nos dois). Peça SEMIFACIAL (cobre nariz e boca, apoia sob o queixo) — Grupo 6: filtro VO/GA; Grupo 7: filtro NH3 (+ filtro mecânico nos dois) — Manual MPO-005, item 9.8/9.3. <button type=\"button\" onclick=\"toggleDetalheItem(this,'prevalencia_pfacial')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">⚠ Ver regra de prevalência (carga mista) ▸</button><div id=\"detalhe_prevalencia_pfacial\" style=\"display:none;margin-top:4px;\">PREVALÊNCIA (item 9.4): em carga mista com produtos de grupos de EPI diferentes, a peça facial INTEIRA prevalece sobre a semifacial e/ou óculos — se o motorista já porta a inteira (do produto mais exigente), não cabe autuar por falta de semifacial/óculos de outro produto do mesmo carregamento.</div> Com CA, na validade e em bom estado?" },
     { id: "protetorfacial", nome: "Protetor Facial", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). Com CA, na validade e em bom estado?" },
   ]},
   { title: "3. Documentação (Veículo/Equipamento/Carga)", items: [
@@ -6151,6 +6151,15 @@ function confirmarOnu(){
   persistDraft();
 }
 document.getElementById("btnConfirmarOnu").addEventListener("click", confirmarOnu);
+// Toggle genérico e reutilizável pra qualquer trecho "a mais" embutido
+// direto na descrição de um item (ex: regras longas que nem sempre
+// precisam estar visíveis) — evita poluir a tela por padrão.
+function toggleDetalheItem(botao, chave){
+  const div = document.getElementById("detalhe_" + chave);
+  const aberto = div.style.display !== "none";
+  div.style.display = aberto ? "none" : "block";
+  botao.textContent = botao.textContent.replace(aberto ? "▾" : "▸", aberto ? "▸" : "▾");
+}
 document.getElementById("imgSimboloQuantLimitada").src = IMAGEM_ROTULO_POR_CLASSE["quant_limitada"];
 document.getElementById("meta_placa").addEventListener("input", (e)=>{
   const pos = e.target.selectionStart;
