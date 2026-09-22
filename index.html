@@ -637,6 +637,7 @@
 
   <div class="card" id="painelCategoriasView" style="display:none;">
     <h2>Categorias de Fiscalização</h2>
+    <div id="resumoDadosFixo" style="display:none;margin-bottom:12px;padding:8px 10px;background:#eef5ff;border:1px solid #c9d9ec;border-radius:6px;font-size:12.5px;color:var(--azul-prf);font-weight:600;"></div>
     <p style="font-size:12.5px;color:var(--texto-claro);margin:0 0 14px;">Toque numa categoria pra preencher só ela. Pode ir e voltar quantas vezes quiser — nada se perde.</p>
     <div id="onuValidacaoDashboard" style="display:none;margin-bottom:14px;"></div>
     <div id="categoryGrid" class="category-grid"></div>
@@ -5688,6 +5689,7 @@ function executarNovaFiscalizacao(){
   document.querySelectorAll("#checklistArea .card").forEach(c=>c.classList.add("hidden"));
   updateProgress();
   document.getElementById("resultView").classList.remove("show");
+  atualizarResumoDadosFixo();
   expandirDadosPrimarios();
   validarCamposEssenciais();
   // preenche data/hora atuais automaticamente — sem perguntar, o fiscal
@@ -6335,7 +6337,31 @@ function mostrarPainel(){
   document.getElementById("actionsBar").style.display = "flex";
   document.querySelectorAll("#checklistArea .secao-card").forEach(c=>c.classList.add("hidden"));
   renderPainelCategorias();
+  atualizarResumoDadosFixo();
   window.scrollTo({top:0, behavior:"smooth"});
+}
+
+// Faixa fixa com os dados essenciais (placa/UOP/ONU/tipo de carga) —
+// sempre visível na tela de categorias, pra confirmar visualmente que o
+// preenchimento inicial não se perdeu ao reabrir o app/atualizar a página.
+// Sem isso, o fiscal via só a lista de categorias sem nenhuma prova na
+// tela de que os dados sobreviveram — mesmo com o state 100% intacto.
+function atualizarResumoDadosFixo(){
+  const el = document.getElementById("resumoDadosFixo");
+  if(!el) return;
+  const m = state.meta || {};
+  const partes = [];
+  if(m.uop) partes.push(`UOP: ${m.uop}`);
+  if(m.placa) partes.push(`Placa: ${m.placa}`);
+  if(m.onu) partes.push(`ONU: ${m.onu}`);
+  if(m.tipo_carga) partes.push(m.tipo_carga);
+  if(m.estado_veiculo){
+    const rotulos = {carregado:"Carregado", vazio_contaminado:"Vazio/Contaminado", vazio_descontaminado:"Vazio/Descontaminado"};
+    partes.push(rotulos[m.estado_veiculo] || m.estado_veiculo);
+  }
+  if(partes.length === 0){ el.style.display = "none"; return; }
+  el.textContent = "📋 " + partes.join(" · ");
+  el.style.display = "block";
 }
 
 function abrirCategoria(index){
