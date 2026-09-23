@@ -4,7 +4,7 @@
 // ícones. Sempre que publicar uma versão nova, aumente o número da
 // versão abaixo (CACHE_NOME) — isso força os usuários a baixarem a
 // versão atualizada na próxima vez que abrirem o app.
-const CACHE_NOME = "checklist-pp-v48";
+const CACHE_NOME = "checklist-pp-v49";
 const ARQUIVOS_PARA_CACHE = [
   "./",
   "./index.html",
@@ -34,22 +34,18 @@ self.addEventListener("activate", (evento) => {
   self.clients.claim();
 });
 
-// Estratégia "cache primeiro, rede como reforço": tenta servir do cache
-// (rápido, funciona offline); se não achar, busca na rede e guarda pra
-// próxima vez.
+// Estratégia "rede primeiro, cache como reserva": tenta buscar a versão
+// mais atual na rede sempre que possível (evita ficar preso numa versão
+// velha por causa de um Service Worker anterior ainda ativo interceptando
+// o próprio cache.addAll() da instalação); só usa o cache guardado quando
+// estiver genuinamente offline (sem sinal em campo).
 self.addEventListener("fetch", (evento) => {
   evento.respondWith(
-    caches.match(evento.request).then((respostaCache) => {
-      if (respostaCache) return respostaCache;
-      return fetch(evento.request).then((respostaRede) => {
-        return caches.open(CACHE_NOME).then((cache) => {
-          cache.put(evento.request, respostaRede.clone());
-          return respostaRede;
-        });
-      }).catch(() => {
-        // sem cache e sem rede -- não tem o que fazer, deixa o navegador
-        // mostrar o erro padrão dele
-      });
-    })
+    fetch(evento.request).then((respostaRede) => {
+      caches.open(CACHE_NOME).then((cache) => cache.put(evento.request, respostaRede.clone()));
+      return respostaRede;
+    }).catch(() => caches.match(evento.request))
   );
 });
+
+
