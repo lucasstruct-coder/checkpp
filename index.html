@@ -465,14 +465,17 @@
 
 <header style="position:relative;">
   <h1>FISCALIZAÇÃO DE PRODUTOS PERIGOSOS</h1>
-  <p>Preenchimento digital do checklist</p>
+  <p>Preenchimento digital do checklist <span id="badgeVersaoApp" style="opacity:0.75;font-size:11px;"></span></p>
   <button type="button" id="btnAbrirSobre" style="position:absolute;bottom:10px;right:12px;background:none;border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:14px;padding:3px 10px;font-size:11px;cursor:pointer;">ℹ Sobre este app</button>
 </header>
+
+<div id="toastAtualizacao" style="position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--verde,#1e7a3e);color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,0.25);z-index:1200;opacity:0;pointer-events:none;transition:opacity 0.3s ease, transform 0.3s ease;"></div>
 
 <div id="modalSobre" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center;padding:20px;">
   <div style="background:#fff;border-radius:10px;padding:22px;max-width:340px;text-align:center;">
     <h3 style="margin:0 0 10px;color:var(--azul-prf);">Sobre este app</h3>
     <p style="font-size:13px;line-height:1.6;color:#333;margin:0 0 14px;">Desenvolvido por <strong>Lucas Vanderley</strong>. Ferramenta pessoal de apoio ao trabalho do PRF na fiscalização de produtos perigosos, baseada no Manual MPO-005. Não substitui o manual oficial nem o julgamento técnico do PRF.</p>
+    <p style="font-size:12px;color:var(--texto-claro);margin:0 0 14px;">Versão <span id="textoVersaoApp"></span></p>
     <p style="font-size:13px;font-style:italic;color:var(--azul-prf);margin:0 0 16px;">"Porque para Deus, nada é impossível."<br>— Lucas 1:37</p>
     <button type="button" id="btnFecharSobre" style="background:var(--azul-prf);color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:13px;cursor:pointer;">Fechar</button>
   </div>
@@ -4514,6 +4517,48 @@ function aplicarDispensaPorTipoCarga(lista, deveDispensar, textoTag){
 const STORAGE_KEY = "fiscalizacao_pp_rascunho_dashboard";
 let state = { meta: {}, respostas: {} };
 
+// VERSÃO PÚBLICA DO APP — número que aparece pro fiscal (cabeçalho + "Sobre
+// este app"), semântico (major.minor) e independente do CACHE_NOME do
+// Service Worker (esse último é só controle interno de cache do navegador,
+// sobe a cada publicação mesmo que a versão pública não mude). Fonte única:
+// só mexer aqui — os dois lugares na tela puxam daqui, nunca ficam
+// dessincronizados. Convenção: minor (1.1, 1.2...) pra ajustes e correções,
+// major (2.0) pra mudanças grandes de fluxo/telas.
+const APP_VERSION = "1.1";
+document.getElementById("badgeVersaoApp").textContent = "· v" + APP_VERSION;
+document.getElementById("textoVersaoApp").textContent = APP_VERSION;
+
+// AVISO DE ATUALIZAÇÃO — compara a versão que o navegador tinha guardado
+// da última vez que o app foi aberto com a APP_VERSION atual. Se mudou,
+// mostra um aviso rápido no topo ("App atualizado para a versão X") e
+// atualiza o que fica guardado. Isso não é uma notificação push de verdade
+// (não aparece fora do app nem precisa de permissão) — é só um aviso
+// visual dentro da própria tela, mas cobre o mesmo objetivo prático: o
+// fiscal sabe, sem precisar ir no "Sobre este app", que está numa versão
+// nova. Na primeira vez que o app é aberto (sem versão anterior guardada)
+// não mostra nada, pra não soar como "atualização" logo na instalação.
+const CHAVE_VERSAO_VISTA = "checkpp_ultima_versao_vista";
+(function avisarSeAtualizou(){
+  try{
+    const versaoAnterior = localStorage.getItem(CHAVE_VERSAO_VISTA);
+    if(versaoAnterior && versaoAnterior !== APP_VERSION){
+      const toast = document.getElementById("toastAtualizacao");
+      toast.textContent = "✅ App atualizado para a versão " + APP_VERSION;
+      requestAnimationFrame(()=>{
+        toast.style.opacity = "1";
+        toast.style.transform = "translateX(-50%) translateY(0)";
+      });
+      setTimeout(()=>{
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(-50%) translateY(-20px)";
+      }, 4000);
+    }
+    localStorage.setItem(CHAVE_VERSAO_VISTA, APP_VERSION);
+  }catch(e){
+    console.warn("Não foi possível checar aviso de atualização", e);
+  }
+})();
+
 function totalItems(){
   return SECTIONS.filter(s=>s.contaProgresso !== false).reduce((acc,s)=>acc+s.items.length,0);
 }
@@ -5064,17 +5109,33 @@ function updateProgress(){
 }
 
 function collectMeta(){
+  const metaAnterior = state.meta || {};
+  // BLINDAGEM CONTRA PERDA DE DADOS: uma vez que a fiscalização já tem
+  // progresso registrado (respostas != {}), os campos essenciais (UOP,
+  // Placa, Tipo de Carga, ONU) não podem mais "sumir" do rascunho salvo,
+  // mesmo que, por algum motivo pontual (ex: leitura do DOM num instante
+  // de transição entre telas), o valor lido do campo venha vazio nesse
+  // exato momento. Nesses casos, mantém o último valor não-vazio já
+  // confirmado em vez de sobrescrever com string vazia — evita o bug
+  // relatado de "Continuar de onde parei" mostrando resumo incompleto
+  // (UOP/Placa/Tipo de Carga perdidos enquanto ONU/Estado sobrevivem).
+  // Antes de haver qualquer progresso, o comportamento normal (permitir
+  // vazio, pro fiscal ainda poder digitar/corrigir os campos) é mantido.
+  const temProgresso = Object.keys(state.respostas || {}).length > 0;
+  const preservarSeVazio = (novo, anterior) => (temProgresso && !novo && anterior) ? anterior : novo;
+
   state.meta = {
     data: document.getElementById("meta_data").value,
     hora: document.getElementById("meta_hora").value,
-    uop: document.getElementById("meta_uop").value,
-    placa: document.getElementById("meta_placa").value,
+    uop: preservarSeVazio(document.getElementById("meta_uop").value, metaAnterior.uop),
+    placa: preservarSeVazio(document.getElementById("meta_placa").value, metaAnterior.placa),
     semi: document.getElementById("meta_semi").value,
-    tipo_carga: document.getElementById("meta_tipo_carga").value,
-    onu: document.getElementById("meta_onu").value,
-    estado_veiculo: document.getElementById("meta_estado_veiculo").value,
+    tipo_carga: preservarSeVazio(document.getElementById("meta_tipo_carga").value, metaAnterior.tipo_carga),
+    onu: preservarSeVazio(document.getElementById("meta_onu").value, metaAnterior.onu),
+    estado_veiculo: preservarSeVazio(document.getElementById("meta_estado_veiculo").value, metaAnterior.estado_veiculo),
     certificado_descontaminacao_valido: (() => {
       const v = document.getElementById("meta_certificado_descontaminacao_valido").value;
+      if(!v) return temProgresso ? (metaAnterior.certificado_descontaminacao_valido ?? null) : null;
       return v === "sim" ? true : (v === "nao" ? false : null);
     })(),
     carga_propria: document.getElementById("meta_carga_propria").checked,
@@ -6573,13 +6634,47 @@ validarCamposEssenciais();
 // com "ainda não carreguei o rascunho". Isso evita perder a referência de
 // uma fiscalização em andamento em caso de atualização de página acidental.
 const modalInicio = document.getElementById("modalInicio");
-const temRascunhoComProgresso = Object.keys(state.respostas).length > 0 || !!state.meta.placa || !!state.meta.onu;
 
-if(temRascunhoComProgresso){
-  modalInicio.classList.remove("hidden");
-} else {
+// VALIDAÇÃO EXTRA: só considera "fiscalização em andamento" de verdade
+// quando já existe progresso registrado (respostas != {}) E os campos
+// obrigatórios que o motor de regras depende (ONU, Tipo de Carga, Estado
+// do Veículo) realmente estão preenchidos no rascunho salvo — não só a
+// existência de alguma resposta. Isso é o que garante, na prática, que o
+// fiscal só chegou a essa tela porque passou pelo botão "Iniciar
+// Fiscalização" (que já exige esses campos via validarCamposEssenciais).
+// Sem essa checagem, um rascunho corrompido/incompleto (por qualquer
+// causa pontual) faria a opção "Continuar de onde parei" levar pra uma
+// tela de categorias com dados essenciais faltando — a própria falha que
+// esse ajuste evita, e não só o sintoma dela.
+function rascunhoTemFiscalizacaoValida(){
+  const temRespostas = Object.keys(state.respostas).length > 0;
+  if(!temRespostas) return false;
+  const m = state.meta || {};
+  return !!m.onu && !!m.tipo_carga && !!m.estado_veiculo;
+}
+
+const temProgressoRegistrado = Object.keys(state.respostas).length > 0;
+const rascunhoValido = !temProgressoRegistrado || rascunhoTemFiscalizacaoValida();
+
+if(temProgressoRegistrado && !rascunhoValido){
+  // Rascunho corrompido: tem respostas registradas, mas faltam os campos
+  // obrigatórios que classificam a fiscalização. Continuar não é seguro
+  // (o resumo e o próprio motor de regras ficariam incompletos), então
+  // não oferece essa opção — descarta o rascunho inválido e começa do
+  // zero, silenciosamente, sem travar o fiscal num estado quebrado.
+  console.warn("Rascunho salvo estava incompleto (faltando ONU/Tipo de Carga/Estado do Veículo apesar de ter respostas) — descartado.");
+  state = { meta:{}, respostas:{} };
+  localStorage.removeItem(STORAGE_KEY);
   preencherDataHoraAtual();
   setTimeout(()=> document.getElementById("meta_uop").focus(), 200);
+} else {
+  const temRascunhoComProgresso = temProgressoRegistrado || !!state.meta.placa || !!state.meta.onu;
+  if(temRascunhoComProgresso){
+    modalInicio.classList.remove("hidden");
+  } else {
+    preencherDataHoraAtual();
+    setTimeout(()=> document.getElementById("meta_uop").focus(), 200);
+  }
 }
 
 document.getElementById("btnModalContinuar").addEventListener("click", ()=>{
