@@ -726,7 +726,7 @@ const SECTIONS = [
     { id: "capacete", nome: "Capacete", desc: "Proteção da cabeça — casco rígido + suspensão (Manual MPO-005, item 9.8). Com CA, na validade e em bom estado?" },
     { id: "luvas", nome: "Luvas", desc: "Proteção das mãos, pulsos e braços contra agentes químicos/físicos (látex, nitrílicas, PVA, butílicas, raspa etc — Manual MPO-005, item 9.8). Com CA, na validade, em bom estado e compatível com o produto?" },
     { id: "oculos", nome: "Óculos", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). <button type=\"button\" onclick=\"toggleDetalheItem(this,'prevalencia_oculos')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">⚠ Ver regra de prevalência (carga mista) ▸</button><div id=\"detalhe_prevalencia_oculos\" style=\"display:none;margin-top:4px;\">PREVALÊNCIA (item 9.4): em carga mista, se o motorista já porta a peça facial INTEIRA (que cobre os olhos) exigida por outro produto do mesmo carregamento, ela substitui os óculos — não cabe autuar por falta deste item nesse caso.</div> Ampla visão, com CA, na validade e em bom estado?" },
-    { id: "pfacial", nome: "Máscara Respiratória (Inteira/Semifacial)", desc: "Peça Facial INTEIRA (cobre boca, nariz e olhos) — Grupo 4: filtro CO; Grupo 5: filtro SO2 (+ filtro mecânico nos dois). Peça SEMIFACIAL (cobre nariz e boca, apoia sob o queixo) — Grupo 6: filtro VO/GA; Grupo 7: filtro NH3 (+ filtro mecânico nos dois) — Manual MPO-005, item 9.8/9.3. <button type=\"button\" onclick=\"toggleDetalheItem(this,'prevalencia_pfacial')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">⚠ Ver regra de prevalência (carga mista) ▸</button><div id=\"detalhe_prevalencia_pfacial\" style=\"display:none;margin-top:4px;\">PREVALÊNCIA (item 9.4): em carga mista com produtos de grupos de EPI diferentes, a peça facial INTEIRA prevalece sobre a semifacial e/ou óculos — se o motorista já porta a inteira (do produto mais exigente), não cabe autuar por falta de semifacial/óculos de outro produto do mesmo carregamento.</div> Com CA, na validade e em bom estado?" },
+    { id: "pfacial", nome: "Máscara Respiratória (Inteira/Semifacial)", desc: "<div id=\"pfacialResumoDinamico\" style=\"display:none;margin:0 0 6px;padding:6px 8px;background:#eef6f0;border-left:3px solid #2d6a4f;font-size:12px;font-weight:600;color:#1e4620;border-radius:0 4px 4px 0;\"></div><button type=\"button\" onclick=\"toggleDetalheItem(this,'tabela_pfacial')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">Ver tabela completa por grupo ▸</button><div id=\"detalhe_tabela_pfacial\" style=\"display:none;margin-top:4px;\">Peça Facial INTEIRA (cobre boca, nariz e olhos) — Grupo 2: filtro VO/GA; Grupo 3: filtro NH3; Grupo 4: filtro CO; Grupo 5: filtro SO2 (+ filtro mecânico em todos); Grupo 10 (classe 1, explosivos): filtro polivalente/multigases (P2) + filtro mecânico. Peça SEMIFACIAL (cobre nariz e boca, apoia sob o queixo) — Grupo 6: filtro VO/GA; Grupo 7: filtro NH3 (+ filtro mecânico nos dois) — ABNT NBR 9735, item 4.2.12 / Manual MPO-005, item 9.8/9.3.</div> <button type=\"button\" onclick=\"toggleDetalheItem(this,'prevalencia_pfacial')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">⚠ Ver regra de prevalência (carga mista) ▸</button><div id=\"detalhe_prevalencia_pfacial\" style=\"display:none;margin-top:4px;\">PREVALÊNCIA (item 9.4): em carga mista com produtos de grupos de EPI diferentes, a peça facial INTEIRA prevalece sobre a semifacial e/ou óculos — se o motorista já porta a inteira (do produto mais exigente), não cabe autuar por falta de semifacial/óculos de outro produto do mesmo carregamento.</div> Com CA, na validade e em bom estado?" },
     { id: "protetorfacial", nome: "Protetor Facial", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). Com CA, na validade e em bom estado?" },
   ]},
   { title: "3. Documentação (Veículo/Equipamento/Carga)", items: [
@@ -4098,6 +4098,39 @@ function outroFiltroAindaDispensa(itemDiv, tagClassePropria){
   return TODAS_CLASSES_TAG_DISPENSA.some(classe => classe !== tagClassePropria && itemDiv.querySelector(`.${classe}`));
 }
 
+// Detalhe do filtro/peça de máscara exigido por grupo (só os grupos que
+// usam o item "pfacial" — ver EPI_POR_GRUPO). Usado por
+// atualizarResumoPfacial() pra mostrar, específico pro ONU digitado, só
+// a linha que se aplica — em vez do fiscal ter que achar a linha certa
+// numa tabela com os 7 grupos possíveis.
+const INFO_PFACIAL_POR_GRUPO = {
+  2:  { peca: "INTEIRA",    filtro: "VO/GA",  mecanico: true },
+  3:  { peca: "INTEIRA",    filtro: "NH3",    mecanico: false },
+  4:  { peca: "INTEIRA",    filtro: "CO",     mecanico: true },
+  5:  { peca: "INTEIRA",    filtro: "SO2",    mecanico: true },
+  6:  { peca: "SEMIFACIAL", filtro: "VO/GA",  mecanico: true },
+  7:  { peca: "SEMIFACIAL", filtro: "NH3",    mecanico: true },
+  10: { peca: "INTEIRA",    filtro: "polivalente/multigases (P2)", mecanico: true },
+};
+function atualizarResumoPfacial(listaGrupos){
+  const el = document.getElementById("pfacialResumoDinamico");
+  if(!el) return;
+  const vistos = new Set();
+  const linhas = listaGrupos
+    .map(g => INFO_PFACIAL_POR_GRUPO[g] ? {...INFO_PFACIAL_POR_GRUPO[g], grupo:g} : null)
+    .filter(Boolean)
+    .filter(info => {
+      const chave = info.peca + info.filtro;
+      if(vistos.has(chave)) return false;
+      vistos.add(chave);
+      return true;
+    })
+    .map(info => `Peça ${info.peca} — filtro ${info.filtro}${info.mecanico ? " + filtro mecânico" : ""} (Grupo ${info.grupo})`);
+  if(linhas.length === 0){ el.style.display = "none"; return; }
+  el.innerHTML = "📌 <strong>Para este produto:</strong> " + linhas.join(" · ");
+  el.style.display = "block";
+}
+
 function aplicarFiltroEpi(grupoOuLista){
   const listaGrupos = Array.isArray(grupoOuLista) ? grupoOuLista : [grupoOuLista];
   const exigidos = new Set();
@@ -4105,6 +4138,7 @@ function aplicarFiltroEpi(grupoOuLista){
     obterEpiExigidoPorGrupo(g).forEach(id=>exigidos.add(id));
   });
   epiExigidosAtuais = [...exigidos];
+  atualizarResumoPfacial(listaGrupos);
   EPI_ITEMS.forEach(id=>{
     const opts = document.querySelector(`.opts[data-id="${id}"]`);
     if(!opts) return;
@@ -4158,6 +4192,8 @@ function aplicarFiltroEpi(grupoOuLista){
 
 function limparFiltroEpi(){
   epiExigidosAtuais = EPI_ITEMS.slice();
+  const resumoPfacial = document.getElementById("pfacialResumoDinamico");
+  if(resumoPfacial) resumoPfacial.style.display = "none";
   EPI_ITEMS.forEach(id=>{
     const opts = document.querySelector(`.opts[data-id="${id}"]`);
     if(!opts) return;
