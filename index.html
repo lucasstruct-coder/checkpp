@@ -730,7 +730,7 @@ const SECTIONS = [
     { id: "protetorfacial", nome: "Protetor Facial", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). Com CA, na validade e em bom estado?" },
   ]},
   { title: "3. Documentação (Veículo/Equipamento/Carga)", items: [
-    { id: "docpp", nome: "DoCPP", desc: "Doc. de Transporte (DANFE, DACTE, DANDFE, MANIFESTO...), informações corretas e completas?" },
+    { id: "docpp", nome: "DoCPP", desc: "Doc. de Transporte (DANFE, DACTE, DANDFE, MANIFESTO...). Verifique se a descrição do produto traz, <strong>nessa sequência exata e sem nenhuma outra informação intercalada entre os itens</strong>: 1) Número ONU (precedido de \"UN\" ou \"ONU\"); 2) Nome Apropriado para Embarque (+ info complementar, se o nome for \"N.E.\"); 3) nº da Classe ou Subclasse de risco principal; 4) nº da Classe/Subclasse do(s) risco(s) subsidiário(s), entre parênteses, quando houver; 5) Grupo de Embalagem, quando o produto tiver (pode vir precedido de \"GE\"); 6) quantidade total do produto (pode estar em campo separado do documento fiscal). <button type=\"button\" onclick=\"toggleDetalheItem(this,'exemplo_docpp')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">Ver exemplo de preenchimento correto ▸</button><div id=\"detalhe_exemplo_docpp\" style=\"display:none;margin-top:4px;\">As palavras \"CLASSE\" e \"GRUPO DE EMBALAGEM\" NÃO são obrigatórias por extenso — o documento pode trazer só os números/letras na ordem certa (itens 1 a 5, sem nada intercalado). Exemplo oficial do Manual MPO-005: <em>\"ONU 1098 ÁLCOOL ALÍLICO 6.1 (3) I\"</em> (compacto) ou <em>\"ONU 1098, ÁLCOOL ALÍLICO, Subclasse 6.1, (Classe 3), GE I\"</em> (por extenso, com o prefixo \"GE\" antes da letra do Grupo de Embalagem). Outro exemplo compacto: <em>\"ONU 1203, GASOLINA, 3, II\"</em>. Com risco subsidiário: <em>\"ONU 1830, ÁCIDO SULFÚRICO, 8 (6.1), II\"</em>. O que importa é constarem os DADOS certos, na ordem certa, sem informação estranha intercalada entre eles — não o rótulo escrito por extenso. Faltando qualquer um dos itens 1 a 5 — ou o nome não sendo o nome apropriado da Coluna 2 (nome comercial genérico não vale) — o documento fica desqualificado (Manual MPO-005, item 5.4.1.3 a 5.4.1.6 do anexo da Resolução ANTT 5.998/22; Ficha 15/16). Se o produto exigir nome técnico complementar (Provisão 274, já sinalizado acima quando aplicável), ele também precisa constar entre parênteses.</div> Informações corretas e completas?" },
     { id: "cipp", nome: "Certificado de Inspeção do Equipamento (CIPP)", desc: "Exigido em transporte a GRANEL. Do EQUIPAMENTO (tanque/cisterna), emitido pelo Inmetro ou entidade acreditada. Válido? Confere com veículo e equipamento? Dados conferem com plaquetas? Legível, sem rasura/adulteração?" },
     { id: "civ", nome: "Certificado de Inspeção Veicular (CIV)", desc: "Exigido em transporte a GRANEL. Do VEÍCULO (cavalo/chassi), emitido pelo Inmetro ou entidade acreditada. Válido? Confere com o veículo? Legível, sem rasura ou adulteração?" },
     { id: "ctpp", nome: "Certificado do Equipamento Novo (CTPP)", desc: "Exigido em transporte a GRANEL, quando o equipamento é NOVO (ainda não passou por inspeção periódica — nesse caso vale o CTPP no lugar do CIPP). Emitido pelo Inmetro. Válido? Confere com veículo e equipamento? Dados conferem com plaquetas? Legível, sem rasura/adulteração?" },
@@ -4131,6 +4131,42 @@ function atualizarResumoPfacial(listaGrupos){
   el.style.display = "block";
 }
 
+// Foto de referência da máscara respiratória — dinâmica, mostra só o
+// modelo exigido pro(s) grupo(s) do ONU digitado, com legenda (Peça
+// Inteira / Peça Semifacial), em vez de sempre as duas fotos sem
+// indicação de qual é qual (o que gerava confusão em campo — o fiscal
+// não sabia qual comparar com o que o motorista estava usando).
+// Em carga mista com grupos que exigem peças diferentes, prevalece a
+// peça INTEIRA (item 9.4 da NBR 9735: ela cobre a exigência da
+// semifacial também) — por isso só ela é mostrada nesse caso.
+function atualizarFotoPfacial(listaGrupos){
+  const opts = document.querySelector('.opts[data-id="pfacial"]');
+  if(!opts) return;
+  const itemDiv = opts.closest(".item");
+  if(!itemDiv) return;
+  let container = itemDiv.querySelector(".foto-referencia-pfacial");
+  if(!container){
+    container = document.createElement("div");
+    container.className = "foto-referencia-pfacial";
+    const desc = itemDiv.querySelector(".item-desc");
+    if(desc) desc.insertAdjacentElement("afterend", container);
+  }
+  const infos = listaGrupos.map(g => INFO_PFACIAL_POR_GRUPO[g]).filter(Boolean);
+  if(infos.length === 0){
+    container.innerHTML = "";
+    container.style.display = "none";
+    return;
+  }
+  const precisaInteira = infos.some(i => i.peca === "INTEIRA");
+  const chave = precisaInteira ? "epi_pfacial_inteira" : "epi_pfacial_semifacial";
+  const legenda = precisaInteira ? "Peça Inteira" : "Peça Semifacial";
+  container.style.cssText = "display:flex;margin-top:4px;";
+  container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+    <img src="${IMAGEM_ROTULO_POR_CLASSE[chave]}" alt="${legenda}" style="width:56px;height:56px;object-fit:contain;border:1px solid var(--cinza-borda);border-radius:4px;background:#fff;">
+    <span style="font-size:10px;font-weight:600;color:var(--texto-claro);">${legenda}</span>
+  </div>`;
+}
+
 function aplicarFiltroEpi(grupoOuLista){
   const listaGrupos = Array.isArray(grupoOuLista) ? grupoOuLista : [grupoOuLista];
   const exigidos = new Set();
@@ -4139,6 +4175,7 @@ function aplicarFiltroEpi(grupoOuLista){
   });
   epiExigidosAtuais = [...exigidos];
   atualizarResumoPfacial(listaGrupos);
+  atualizarFotoPfacial(listaGrupos);
   EPI_ITEMS.forEach(id=>{
     const opts = document.querySelector(`.opts[data-id="${id}"]`);
     if(!opts) return;
@@ -4194,6 +4231,8 @@ function limparFiltroEpi(){
   epiExigidosAtuais = EPI_ITEMS.slice();
   const resumoPfacial = document.getElementById("pfacialResumoDinamico");
   if(resumoPfacial) resumoPfacial.style.display = "none";
+  const fotoPfacial = document.querySelector(".foto-referencia-pfacial");
+  if(fotoPfacial){ fotoPfacial.innerHTML = ""; fotoPfacial.style.display = "none"; }
   EPI_ITEMS.forEach(id=>{
     const opts = document.querySelector(`.opts[data-id="${id}"]`);
     if(!opts) return;
@@ -6109,6 +6148,52 @@ function aplicarAvisoExtintor(numerosOnu){
   }
 }
 
+// Aviso dinâmico no item DoCPP: mostra, pro ONU já digitado, a linha exata
+// que o documento de transporte precisa trazer — em vez do fiscal ter que
+// montar isso de cabeça a partir da descrição genérica do item. Um colega
+// relatou que a descrição sozinha não deixava claro o que checar; isso
+// resolve mostrando o "gabarito" pronto, pelo mesmo padrão já usado pro
+// aviso de Extintor/Provisão 274 acima.
+function aplicarAvisoDocpp(numerosOnu){
+  numerosOnu = numerosOnu || [];
+  const opts = document.querySelector('.opts[data-id="docpp"]');
+  if(!opts) return;
+  const itemDiv = opts.closest(".item");
+  let aviso = document.getElementById("aviso_docpp_item");
+  const onusNum = numerosOnu.map(n => parseInt(n,10));
+  const linhas = onusNum.map(onu=>{
+    const info = obterInfoProduto(onu);
+    if(!info) return null;
+    if(info.variantes){
+      return `<div style="margin-top:4px;"><strong>ONU ${onu}</strong> — ${info.nome}: tem ${info.variantes.length} classificações possíveis (varia por concentração/pureza) — confira no documento qual Classe/Grupo de Embalagem bate com a apresentada.</div>`;
+    }
+    // Formato compacto (números/letras, sem escrever "CLASSE"/"GRUPO DE
+    // EMBALAGEM" por extenso) — é o que costuma aparecer de fato no
+    // DANFE/manifesto, e é igualmente válido (o que importa é o dado, não
+    // o rótulo escrito). Risco subsidiário entra entre parênteses logo
+    // após a classe, como no padrão ADR/RID que a Resolução ANTT segue.
+    const classeComSubsid = info.riscosSubsidiarios.length
+      ? `${info.classe} (${info.riscosSubsidiarios.map(r=>r.classe).join(", ")})`
+      : info.classe;
+    // "GE" é o prefixo opcional que o manual admite antes da letra do
+    // Grupo de Embalagem quando escrito por extenso (ex.: "GE I").
+    const ge = info.grupoEmbalagem ? `, GE ${info.grupoEmbalagem}` : "";
+    const nomeTecnico = info.exigeNomeTecnico274 ? ` — + nome técnico entre parênteses depois do nome (Provisão 274, ver aviso acima)` : "";
+    return `<div style="margin-top:4px;"><strong>ONU ${onu}:</strong> "ONU ${onu}, ${info.nome}, ${classeComSubsid}${ge}" + a quantidade total do produto${nomeTecnico}</div>`;
+  }).filter(Boolean);
+  if(linhas.length > 0){
+    if(!aviso){
+      aviso = document.createElement("div");
+      aviso.id = "aviso_docpp_item";
+      aviso.style.cssText = "margin-top:6px;padding:6px 8px;background:#eef6f0;border-left:3px solid #2d6a4f;font-size:12px;";
+      itemDiv.appendChild(aviso);
+    }
+    aviso.innerHTML = `📄 <strong>Pra este produto, o documento deve trazer, nessa sequência e sem nada intercalado (o "GE" é opcional):</strong>${linhas.join("")}`;
+  } else {
+    if(aviso) aviso.remove();
+  }
+}
+
 // Painel do ONU no dashboard vira acordeon (recolhido por padrão) — em
 // mobile, o painel completo ocupa espaço demais na tela inicial. Mantém
 // o estado (aberto/fechado) em memória, sobrevivendo a recálculos
@@ -6138,7 +6223,7 @@ function validarOnu(){
   const box = document.getElementById("onuValidacao");
   const raw = document.getElementById("meta_onu").value.trim();
   const numeros = raw.split(/[,;\s]+/).map(s=>s.replace(/\D/g,"")).filter(Boolean);
-  if(numeros.length === 0){ box.style.display="none"; window.ultimoPainelOnuHtml = ""; const bd = document.getElementById("onuValidacaoDashboard"); if(bd){ bd.innerHTML=""; bd.style.display="none"; } limparFiltroEpi(); aplicarFiltroSinalizacaoEspecial([]); aplicarAvisoProvisao274([]); aplicarAvisoPE375([]); aplicarAvisoExtintor([]); aplicarAvisoRotuloAdicional([]); aplicarNotaQuantLimitada([]); aplicarFiltroOutrosDocumentos([]); aplicarModeloPainelSeguranca([]); aplicarFiltroOnu3509([]); return; }
+  if(numeros.length === 0){ box.style.display="none"; window.ultimoPainelOnuHtml = ""; const bd = document.getElementById("onuValidacaoDashboard"); if(bd){ bd.innerHTML=""; bd.style.display="none"; } limparFiltroEpi(); aplicarFiltroSinalizacaoEspecial([]); aplicarAvisoProvisao274([]); aplicarAvisoPE375([]); aplicarAvisoExtintor([]); aplicarAvisoDocpp([]); aplicarAvisoRotuloAdicional([]); aplicarNotaQuantLimitada([]); aplicarFiltroOutrosDocumentos([]); aplicarModeloPainelSeguranca([]); aplicarFiltroOnu3509([]); return; }
   let html = "";
   let htmlDashboard = "";
   let gruposEncontrados = [];
@@ -6237,6 +6322,7 @@ function validarOnu(){
   aplicarAvisoProvisao274(numeros);
   aplicarAvisoPE375(numeros);
   aplicarAvisoExtintor(numeros);
+  aplicarAvisoDocpp(numeros);
   aplicarAvisoRotuloAdicional(numeros);
   aplicarFiltroOutrosDocumentos(numeros);
   aplicarModeloPainelSeguranca(numeros);
@@ -6526,12 +6612,14 @@ function colapsarDadosPrimarios(){
 // a comparar rapidamente com o que o condutor apresenta. Estático (não
 // depende de ONU/estado), só precisa rodar uma vez.
 function adicionarFotosReferenciaEpi(){
+  // "pfacial" NÃO entra aqui — tem foto própria, dinâmica (só a peça
+  // exigida pro ONU digitado, com legenda), feita por atualizarFotoPfacial().
+  // Ver comentário lá pra explicação completa.
   const mapa = {
     capacete: ["epi_capacete"],
     luvas: ["epi_luvas"],
     oculos: ["epi_oculos"],
     protetorfacial: ["epi_protetorfacial"],
-    pfacial: ["epi_pfacial_inteira", "epi_pfacial_semifacial"],
   };
   Object.entries(mapa).forEach(([itemId, chaves])=>{
     const opts = document.querySelector(`.opts[data-id="${itemId}"]`);
