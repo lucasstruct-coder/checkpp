@@ -730,7 +730,7 @@ const SECTIONS = [
     { id: "protetorfacial", nome: "Protetor Facial", desc: "Proteção dos olhos contra respingos de produtos químicos (Manual MPO-005, item 9.8). Com CA, na validade e em bom estado?" },
   ]},
   { title: "3. Documentação (Veículo/Equipamento/Carga)", items: [
-    { id: "docpp", nome: "DoCPP", desc: "Doc. de Transporte (DANFE, DACTE, DANDFE, MANIFESTO...). Verifique se a descrição do produto traz, <strong>nessa sequência exata e sem nenhuma outra informação intercalada entre os itens</strong>: 1) Número ONU (precedido de \"UN\" ou \"ONU\"); 2) Nome Apropriado para Embarque (+ info complementar, se o nome for \"N.E.\"); 3) nº da Classe ou Subclasse de risco principal; 4) nº da Classe/Subclasse do(s) risco(s) subsidiário(s), entre parênteses, quando houver; 5) Grupo de Embalagem, quando o produto tiver (pode vir precedido de \"GE\"); 6) quantidade total do produto (pode estar em campo separado do documento fiscal). <button type=\"button\" onclick=\"toggleDetalheItem(this,'exemplo_docpp')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">Ver exemplo de preenchimento correto ▸</button><div id=\"detalhe_exemplo_docpp\" style=\"display:none;margin-top:4px;\">As palavras \"CLASSE\" e \"GRUPO DE EMBALAGEM\" NÃO são obrigatórias por extenso — o documento pode trazer só os números/letras na ordem certa (itens 1 a 5, sem nada intercalado). Exemplo oficial do Manual MPO-005: <em>\"ONU 1098 ÁLCOOL ALÍLICO 6.1 (3) I\"</em> (compacto) ou <em>\"ONU 1098, ÁLCOOL ALÍLICO, Subclasse 6.1, (Classe 3), GE I\"</em> (por extenso, com o prefixo \"GE\" antes da letra do Grupo de Embalagem). Outro exemplo compacto: <em>\"ONU 1203, GASOLINA, 3, II\"</em>. Com risco subsidiário: <em>\"ONU 1830, ÁCIDO SULFÚRICO, 8 (6.1), II\"</em>. O que importa é constarem os DADOS certos, na ordem certa, sem informação estranha intercalada entre eles — não o rótulo escrito por extenso. Faltando qualquer um dos itens 1 a 5 — ou o nome não sendo o nome apropriado da Coluna 2 (nome comercial genérico não vale) — o documento fica desqualificado (Manual MPO-005, item 5.4.1.3 a 5.4.1.6 do anexo da Resolução ANTT 5.998/22; Ficha 15/16). Se o produto exigir nome técnico complementar (Provisão 274, já sinalizado acima quando aplicável), ele também precisa constar entre parênteses.</div> Informações corretas e completas?" },
+    { id: "docpp", nome: "DoCPP", desc: "Doc. de Transporte (DANFE, DACTE, DANDFE, MANIFESTO...). Verifique se a descrição do produto traz, <strong>nessa sequência exata e sem nenhuma outra informação intercalada entre os itens</strong>: 1) Número ONU (precedido de \"UN\" ou \"ONU\"); 2) Nome Apropriado para Embarque (+ info complementar, se o nome for \"N.E.\"); 3) nº da Classe ou Subclasse de risco principal; 4) nº da Classe/Subclasse do(s) risco(s) subsidiário(s), entre parênteses, quando houver; 5) Grupo de Embalagem, quando o produto tiver (pode vir precedido de \"GE\" — <strong>se faltar SÓ este item no documento, não desqualifica</strong>: a norma já presume automaticamente o Grupo de maior risco, item 5.4.1.3.1.2 do Anexo da Resolução ANTT nº 5.998/22); 6) quantidade total do produto (pode estar em campo separado do documento fiscal). <button type=\"button\" onclick=\"toggleDetalheItem(this,'exemplo_docpp')\" style=\"background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:var(--azul-prf);font-weight:600;text-decoration:underline;\">Ver exemplo de preenchimento correto ▸</button><div id=\"detalhe_exemplo_docpp\" style=\"display:none;margin-top:4px;\">As palavras \"CLASSE\" e \"GRUPO DE EMBALAGEM\" NÃO são obrigatórias por extenso — o documento pode trazer só os números/letras na ordem certa (itens 1 a 5, sem nada intercalado). Exemplo oficial do Manual MPO-005: <em>\"ONU 1098 ÁLCOOL ALÍLICO 6.1 (3) I\"</em> (compacto) ou <em>\"ONU 1098, ÁLCOOL ALÍLICO, Subclasse 6.1, (Classe 3), GE I\"</em> (por extenso, com o prefixo \"GE\" antes da letra do Grupo de Embalagem). Outro exemplo compacto: <em>\"ONU 1203, GASOLINA, 3, II\"</em>. Com risco subsidiário: <em>\"ONU 1830, ÁCIDO SULFÚRICO, 8 (6.1), II\"</em>. Quando a Coluna 2 lista mais de um nome unidos por \"ou\" (às vezes com sinônimo entre parênteses) — ex.: ONU 1170 \"ETANOL (ÁLCOOL ETÍLICO) ou SOLUÇÃO DE ETANOL (SOLUÇÃO DE ÁLCOOL ETÍLICO)\" — o documento deve trazer só UM desses nomes, nunca a entrada inteira colada: <em>\"ONU 1170, ETANOL, 3, GE II\"</em> já está completo e correto; \"ONU 1170, ETANOL OU ÁLCOOL ETÍLICO OU SOLUÇÃO DE ETANOL, ...\" está errado. O app já mostra, no aviso abaixo, qual nome usar como exemplo pra cada ONU confirmado. O que importa é constarem os DADOS certos, na ordem certa, sem informação estranha intercalada entre eles — não o rótulo escrito por extenso. Faltando qualquer um dos itens 1 a 4 ou o 6 — ou o nome não sendo o nome apropriado da Coluna 2 (nome comercial genérico não vale) — o documento fica desqualificado (Manual MPO-005, item 5.4.1.3 a 5.4.1.6 do anexo da Resolução ANTT 5.998/22; Ficha 15/16). <strong>Exceção: faltar só o item 5 (Grupo de Embalagem) NÃO desqualifica</strong> — a norma (item 5.4.1.3.1.2 do Anexo da Resolução ANTT nº 5.998/22) já resolve isso presumindo, \"para todos os fins\", o Grupo de Embalagem correspondente ao MAIOR nível de risco do produto (ex.: se o produto tem GE II e III possíveis, presume-se o II). Se o produto exigir nome técnico complementar (Provisão 274, já sinalizado acima quando aplicável), ele também precisa constar entre parênteses.</div> Informações corretas e completas?" },
     { id: "cipp", nome: "Certificado de Inspeção do Equipamento (CIPP)", desc: "Exigido em transporte a GRANEL. Do EQUIPAMENTO (tanque/cisterna), emitido pelo Inmetro ou entidade acreditada. Válido? Confere com veículo e equipamento? Dados conferem com plaquetas? Legível, sem rasura/adulteração?" },
     { id: "civ", nome: "Certificado de Inspeção Veicular (CIV)", desc: "Exigido em transporte a GRANEL. Do VEÍCULO (cavalo/chassi), emitido pelo Inmetro ou entidade acreditada. Válido? Confere com o veículo? Legível, sem rasura ou adulteração?" },
     { id: "ctpp", nome: "Certificado do Equipamento Novo (CTPP)", desc: "Exigido em transporte a GRANEL, quando o equipamento é NOVO (ainda não passou por inspeção periódica — nesse caso vale o CTPP no lugar do CIPP). Emitido pelo Inmetro. Válido? Confere com veículo e equipamento? Dados conferem com plaquetas? Legível, sem rasura/adulteração?" },
@@ -2385,6 +2385,54 @@ const QUANT_LIMITADA_EMB_INTERNA = {
 
 
 
+// Alguns nomes da Coluna 2 trazem MAIS DE UM nome apropriado válido pro
+// mesmo produto, unidos por " ou " (às vezes também com um sinônimo entre
+// parênteses) — ex.: ONU 1170 "ETANOL (ÁLCOOL ETÍLICO) ou SOLUÇÃO DE ETANOL
+// (SOLUÇÃO DE ÁLCOOL ETÍLICO)". A regra (Manual MPO-005/Resolução ANTT
+// 5.998/22, item 3.1.2 do Anexo, seguindo o mesmo padrão do Regulamento
+// Modelo da ONU) é: o documento deve trazer APENAS UM desses nomes — nunca
+// a entrada inteira da Coluna 2 colada. Isso é bem diferente de um "ou"
+// dentro de um texto descritivo comum (ex.: "com ou sem ruptor"), que é só
+// parte da frase, não uma lista de nomes alternativos — por isso só
+// tratamos como "nomes alternativos" quando o campo inteiro (tirando os
+// próprios " ou " que separam) não tem nenhuma letra minúscula: nome
+// apropriado sempre vem em MAIÚSCULAS; texto descritivo comum vem em
+// minúsculas (Manual MPO-005, pág. 30).
+function dividirOuForaDeParenteses(texto){
+  const partes = [];
+  let atual = "";
+  let profundidade = 0;
+  for(let i=0; i<texto.length; i++){
+    const ch = texto[i];
+    if(ch === "("){ profundidade++; atual += ch; continue; }
+    if(ch === ")"){ profundidade--; atual += ch; continue; }
+    if(profundidade === 0 && texto.slice(i, i+4) === " ou "){
+      partes.push(atual.trim());
+      atual = "";
+      i += 3;
+      continue;
+    }
+    atual += ch;
+  }
+  if(atual.trim()) partes.push(atual.trim());
+  return partes;
+}
+function obterNomesAlternativos(nomeBruto){
+  if(!nomeBruto || !nomeBruto.includes(" ou ")) return null;
+  const semSeparadores = nomeBruto.replace(/ ou /g, " ");
+  if(/[a-zà-ÿ]/.test(semSeparadores)) return null; // tem texto descritivo minúsculo → não é lista de nomes alternativos
+  const nomes = [];
+  dividirOuForaDeParenteses(nomeBruto).forEach(parte=>{
+    const m = parte.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+    if(m){
+      nomes.push(m[1].trim());
+      dividirOuForaDeParenteses(m[2]).forEach(alt=>nomes.push(alt.trim()));
+    } else {
+      nomes.push(parte);
+    }
+  });
+  return nomes.length > 1 ? nomes : null;
+}
 function obterInfoProduto(onu){
   const dados = PRODUTOS_ONU_INFO[onu];
   if(!dados) return null;
@@ -2404,13 +2452,13 @@ function obterInfoProduto(onu){
         riscosSubsidiarios: classesSub.map(c => ({ classe: c, rotulo: traduzirClasseParaRotulo(c) })),
       };
     });
-    return { nome: dados.n, classe: dados.c, rotulo: rotulo, numeroRisco: null, riscosSubsidiarios: [], grupoEmbalagem: null, grupoEmbalagemInfo: null, variantes: variantes, exigeNomeTecnico274: ONUS_PROVISAO_274.has(onu), quantLimitadaVeiculo: QUANT_LIMITADA_VEICULO[onu] || null, quantLimitadaEmbInterna: QUANT_LIMITADA_EMB_INTERNA[onu] || null };
+    return { nome: dados.n, classe: dados.c, rotulo: rotulo, numeroRisco: null, riscosSubsidiarios: [], grupoEmbalagem: null, grupoEmbalagemInfo: null, variantes: variantes, nomesAlternativos: obterNomesAlternativos(dados.n), exigeNomeTecnico274: ONUS_PROVISAO_274.has(onu), quantLimitadaVeiculo: QUANT_LIMITADA_VEICULO[onu] || null, quantLimitadaEmbInterna: QUANT_LIMITADA_EMB_INTERNA[onu] || null };
   }
   const classesSubsidiarias = RISCO_SUBSIDIARIO[onu] || [];
   const rotulosSubsidiarios = classesSubsidiarias.map(c => ({ classe: c, rotulo: traduzirClasseParaRotulo(c) }));
   const grupoEmbalagem = GRUPO_EMBALAGEM[onu] || null;
   const grupoInfo = grupoEmbalagem ? GRUPO_EMBALAGEM_INFO[grupoEmbalagem] : GRUPO_EMBALAGEM_INDETERMINADO;
-  return { nome: dados.n, classe: dados.c, rotulo: rotulo, numeroRisco: dados.r || null, riscosSubsidiarios: rotulosSubsidiarios, grupoEmbalagem: grupoEmbalagem, grupoEmbalagemInfo: grupoInfo, variantes: null, exigeNomeTecnico274: ONUS_PROVISAO_274.has(onu), quantLimitadaVeiculo: QUANT_LIMITADA_VEICULO[onu] || null, quantLimitadaEmbInterna: QUANT_LIMITADA_EMB_INTERNA[onu] || null };
+  return { nome: dados.n, classe: dados.c, rotulo: rotulo, numeroRisco: dados.r || null, riscosSubsidiarios: rotulosSubsidiarios, grupoEmbalagem: grupoEmbalagem, grupoEmbalagemInfo: grupoInfo, variantes: null, nomesAlternativos: obterNomesAlternativos(dados.n), exigeNomeTecnico274: ONUS_PROVISAO_274.has(onu), quantLimitadaVeiculo: QUANT_LIMITADA_VEICULO[onu] || null, quantLimitadaEmbInterna: QUANT_LIMITADA_EMB_INTERNA[onu] || null };
 }
 
 // SEÇÃO 2 — INFRAÇÕES (Nova Tabela de Infrações PP, Resol. ANTT 5.998/2022)
@@ -4599,7 +4647,7 @@ let state = { meta: {}, respostas: {} };
 // só mexer aqui — os dois lugares na tela puxam daqui, nunca ficam
 // dessincronizados. Convenção: minor (1.1, 1.2...) pra ajustes e correções,
 // major (2.0) pra mudanças grandes de fluxo/telas.
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.2";
 document.getElementById("badgeVersaoApp").textContent = "· v" + APP_VERSION;
 document.getElementById("textoVersaoApp").textContent = APP_VERSION;
 
@@ -6164,8 +6212,16 @@ function aplicarAvisoDocpp(numerosOnu){
   const linhas = onusNum.map(onu=>{
     const info = obterInfoProduto(onu);
     if(!info) return null;
+    // Se a Coluna 2 traz mais de um nome válido pro mesmo produto (unidos
+    // por "ou", às vezes com sinônimo entre parênteses), o documento deve
+    // citar só UM deles — nunca a entrada inteira colada. Usamos o
+    // primeiro como exemplo e avisamos que os outros também servem.
+    const nomeExemplo = info.nomesAlternativos ? info.nomesAlternativos[0] : info.nome;
+    const avisoNomes = info.nomesAlternativos
+      ? `<div style="margin-top:2px;font-style:italic;">Nome apropriado — use só UM destes (nunca todos juntos): ${info.nomesAlternativos.join(" / ")}.</div>`
+      : "";
     if(info.variantes){
-      return `<div style="margin-top:4px;"><strong>ONU ${onu}</strong> — ${info.nome}: tem ${info.variantes.length} classificações possíveis (varia por concentração/pureza) — confira no documento qual Classe/Grupo de Embalagem bate com a apresentada.</div>`;
+      return `<div style="margin-top:4px;"><strong>ONU ${onu}</strong> — ${nomeExemplo}: tem ${info.variantes.length} classificações possíveis (varia por concentração/pureza) — confira no documento qual Classe/Grupo de Embalagem bate com a apresentada.${avisoNomes}</div>`;
     }
     // Formato compacto (números/letras, sem escrever "CLASSE"/"GRUPO DE
     // EMBALAGEM" por extenso) — é o que costuma aparecer de fato no
@@ -6179,7 +6235,10 @@ function aplicarAvisoDocpp(numerosOnu){
     // Grupo de Embalagem quando escrito por extenso (ex.: "GE I").
     const ge = info.grupoEmbalagem ? `, GE ${info.grupoEmbalagem}` : "";
     const nomeTecnico = info.exigeNomeTecnico274 ? ` — + nome técnico entre parênteses depois do nome (Provisão 274, ver aviso acima)` : "";
-    return `<div style="margin-top:4px;"><strong>ONU ${onu}:</strong> "ONU ${onu}, ${info.nome}, ${classeComSubsid}${ge}" + a quantidade total do produto${nomeTecnico}</div>`;
+    // Sem prefixo "ONU X:" antes da citação — o número já abre a própria
+    // citação, então repetir antes era redundante. A quantidade também
+    // não entra mais linha a linha (já fica dita uma vez no cabeçalho).
+    return `<div style="margin-top:4px;">"ONU ${onu}, ${nomeExemplo}, ${classeComSubsid}${ge}"${nomeTecnico}${avisoNomes}</div>`;
   }).filter(Boolean);
   if(linhas.length > 0){
     if(!aviso){
@@ -6188,7 +6247,7 @@ function aplicarAvisoDocpp(numerosOnu){
       aviso.style.cssText = "margin-top:6px;padding:6px 8px;background:#eef6f0;border-left:3px solid #2d6a4f;font-size:12px;";
       itemDiv.appendChild(aviso);
     }
-    aviso.innerHTML = `📄 <strong>Pra este produto, o documento deve trazer, nessa sequência e sem nada intercalado (o "GE" é opcional):</strong>${linhas.join("")}`;
+    aviso.innerHTML = `📄 <strong>Exemplo pra este produto:</strong>${linhas.join("")}`;
   } else {
     if(aviso) aviso.remove();
   }
