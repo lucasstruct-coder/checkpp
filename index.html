@@ -2418,26 +2418,23 @@ function dividirOuForaDeParenteses(texto){
   return partes;
 }
 // "(S)"/"(ES)" colado direto numa palavra (sem espaço antes) é só a marca
-// de plural daquela palavra na Coluna 2 (ex.: "GÁS(ES)" = "GÁS" ou
-// "GASES"), não um nome alternativo — bem diferente de "ETANOL (ÁLCOOL
-// ETÍLICO)", onde o parênteses (com espaço antes) é mesmo um sinônimo.
-// Removemos essas marcas de plural antes de tudo, então "GÁS(ES) DE
-// PETRÓLEO, LIQUEFEITO(S)" vira só "GÁS DE PETRÓLEO, LIQUEFEITO".
-function removerMarcasDePlural(texto){
-  return texto.replace(/(\S)\((s|es)\)/gi, "$1");
-}
+// de plural daquela palavra na Coluna 2 (ex.: "GÁS(ES)" = singular "GÁS"
+// OU plural "GASES") — bem diferente de "ETANOL (ÁLCOOL ETÍLICO)", onde o
+// parênteses (com espaço antes) é um sinônimo de fato. O app NÃO tenta
+// montar a forma plural sozinho (evita erro de grafia/gramática que pode
+// não ser exatamente a forma certa) — deixa a marca exatamente como está
+// na Coluna 2 e quem decide singular ou plural é o fiscal, com margem de
+// segurança.
 function obterNomesAlternativos(nomeBruto){
-  if(!nomeBruto) return null;
-  const nomeLimpo = removerMarcasDePlural(nomeBruto);
-  if(!nomeLimpo.includes(" ou ")) return null;
-  const semSeparadores = nomeLimpo.replace(/ ou /g, " ");
+  if(!nomeBruto || !nomeBruto.includes(" ou ")) return null;
+  const semSeparadores = nomeBruto.replace(/ ou /g, " ");
   if(/[a-zà-ÿ]/.test(semSeparadores)) return null; // tem texto descritivo minúsculo → não é lista de nomes alternativos
   const nomes = [];
-  dividirOuForaDeParenteses(nomeLimpo).forEach(parte=>{
+  dividirOuForaDeParenteses(nomeBruto).forEach(parte=>{
     // Exige espaço antes do "(" pra tratar como sinônimo entre parênteses
-    // (ex.: "ETANOL (ÁLCOOL ETÍLICO)") — um "(" colado à palavra não é
-    // sinônimo (já tratamos plural acima; qualquer outro caso colado fica
-    // como está, sem tentar separar).
+    // (ex.: "ETANOL (ÁLCOOL ETÍLICO)") — um "(" colado à palavra (ex.:
+    // "LIQUEFEITO(S)") é marca de plural, não sinônimo, então fica junto
+    // do texto da parte, sem separar.
     const m = parte.match(/^(.*?)\s+\(([^)]+)\)\s*$/);
     if(m){
       nomes.push(m[1].trim());
@@ -6231,7 +6228,7 @@ function aplicarAvisoDocpp(numerosOnu){
     // por "ou", às vezes com sinônimo entre parênteses), o documento deve
     // citar só UM deles — nunca a entrada inteira colada. Usamos o
     // primeiro como exemplo e avisamos que os outros também servem.
-    const nomeExemplo = info.nomesAlternativos ? info.nomesAlternativos[0] : removerMarcasDePlural(info.nome);
+    const nomeExemplo = info.nomesAlternativos ? info.nomesAlternativos[0] : info.nome;
     const avisoNomes = info.nomesAlternativos
       ? `<div style="margin-top:2px;font-style:italic;">Nome apropriado — use só UM destes (nunca todos juntos): ${info.nomesAlternativos.join(" / ")}.</div>`
       : "";
