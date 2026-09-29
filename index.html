@@ -2417,13 +2417,28 @@ function dividirOuForaDeParenteses(texto){
   if(atual.trim()) partes.push(atual.trim());
   return partes;
 }
+// "(S)"/"(ES)" colado direto numa palavra (sem espaço antes) é só a marca
+// de plural daquela palavra na Coluna 2 (ex.: "GÁS(ES)" = "GÁS" ou
+// "GASES"), não um nome alternativo — bem diferente de "ETANOL (ÁLCOOL
+// ETÍLICO)", onde o parênteses (com espaço antes) é mesmo um sinônimo.
+// Removemos essas marcas de plural antes de tudo, então "GÁS(ES) DE
+// PETRÓLEO, LIQUEFEITO(S)" vira só "GÁS DE PETRÓLEO, LIQUEFEITO".
+function removerMarcasDePlural(texto){
+  return texto.replace(/(\S)\((s|es)\)/gi, "$1");
+}
 function obterNomesAlternativos(nomeBruto){
-  if(!nomeBruto || !nomeBruto.includes(" ou ")) return null;
-  const semSeparadores = nomeBruto.replace(/ ou /g, " ");
+  if(!nomeBruto) return null;
+  const nomeLimpo = removerMarcasDePlural(nomeBruto);
+  if(!nomeLimpo.includes(" ou ")) return null;
+  const semSeparadores = nomeLimpo.replace(/ ou /g, " ");
   if(/[a-zà-ÿ]/.test(semSeparadores)) return null; // tem texto descritivo minúsculo → não é lista de nomes alternativos
   const nomes = [];
-  dividirOuForaDeParenteses(nomeBruto).forEach(parte=>{
-    const m = parte.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  dividirOuForaDeParenteses(nomeLimpo).forEach(parte=>{
+    // Exige espaço antes do "(" pra tratar como sinônimo entre parênteses
+    // (ex.: "ETANOL (ÁLCOOL ETÍLICO)") — um "(" colado à palavra não é
+    // sinônimo (já tratamos plural acima; qualquer outro caso colado fica
+    // como está, sem tentar separar).
+    const m = parte.match(/^(.*?)\s+\(([^)]+)\)\s*$/);
     if(m){
       nomes.push(m[1].trim());
       dividirOuForaDeParenteses(m[2]).forEach(alt=>nomes.push(alt.trim()));
@@ -6216,12 +6231,27 @@ function aplicarAvisoDocpp(numerosOnu){
     // por "ou", às vezes com sinônimo entre parênteses), o documento deve
     // citar só UM deles — nunca a entrada inteira colada. Usamos o
     // primeiro como exemplo e avisamos que os outros também servem.
-    const nomeExemplo = info.nomesAlternativos ? info.nomesAlternativos[0] : info.nome;
+    const nomeExemplo = info.nomesAlternativos ? info.nomesAlternativos[0] : removerMarcasDePlural(info.nome);
     const avisoNomes = info.nomesAlternativos
       ? `<div style="margin-top:2px;font-style:italic;">Nome apropriado — use só UM destes (nunca todos juntos): ${info.nomesAlternativos.join(" / ")}.</div>`
       : "";
     if(info.variantes){
-      return `<div style="margin-top:4px;"><strong>ONU ${onu}</strong> — ${nomeExemplo}: tem ${info.variantes.length} classificações possíveis (varia por concentração/pureza) — confira no documento qual Classe/Grupo de Embalagem bate com a apresentada.${avisoNomes}</div>`;
+      // Produto com mais de uma classificação possível (varia por
+      // concentração/pureza) — mostra um exemplo de citação PRA CADA
+      // variante, já com a Classe/GE daquele grupo específico, em vez de
+      // só mandar o fiscal "conferir" sem um exemplo concreto.
+      // A classe (item 3 da citação) não muda entre variantes — o que
+      // muda por concentração/pureza é o Grupo de Embalagem (e, às vezes,
+      // o risco subsidiário). Número de risco (painel) é outra coisa, não
+      // entra na citação do documento de transporte.
+      const exemplosVariantes = info.variantes.map(v=>{
+        const classeVar = v.riscosSubsidiarios.length
+          ? `${info.classe} (${v.riscosSubsidiarios.map(r=>r.classe).join(", ")})`
+          : info.classe;
+        const geVar = v.grupo ? `, GE ${v.grupo}` : "";
+        return `<div style="margin-top:2px;">Se for do Grupo ${v.grupo || "correspondente"}: <em>"ONU ${onu}, ${nomeExemplo}, ${classeVar}${geVar}"</em></div>`;
+      }).join("");
+      return `<div style="margin-top:4px;"><strong>ONU ${onu}</strong> — ${nomeExemplo}: tem ${info.variantes.length} classificações possíveis (varia por concentração/pureza) — confira no documento qual Classe/Grupo de Embalagem bate com a apresentada. Exemplos:${exemplosVariantes}${avisoNomes}</div>`;
     }
     // Formato compacto (números/letras, sem escrever "CLASSE"/"GRUPO DE
     // EMBALAGEM" por extenso) — é o que costuma aparecer de fato no
@@ -6294,8 +6324,20 @@ function validarOnu(){
     let extintorHtml = "";
     if(infoProduto){
       const extintorInfo = obterExtintorExigido(onu, infoProduto.classe);
+      // Já sabemos o tipo de carga nesse ponto (mesmo campo usado no aviso
+      // do item de checklist) — mostra só a linha que se aplica, em vez
+      // das 3 modalidades inteiras quando já dá pra saber qual vale.
+      const tipoCargaAtual = document.getElementById("meta_tipo_carga")?.value;
+      let regraExtintorTxt;
+      if(tipoCargaAtual === "Granel"){
+        regraExtintorTxt = `<strong>Granel:</strong> ${extintorInfo?.regra.granel}`;
+      } else if(tipoCargaAtual === "Fracionado"){
+        regraExtintorTxt = `<strong>Fracionado, mais de 1t:</strong> ${extintorInfo?.regra.mais1t}<br><strong>Fracionado, até 1t:</strong> ${extintorInfo?.regra.ate1t}`;
+      } else {
+        regraExtintorTxt = `<strong>Granel:</strong> ${extintorInfo?.regra.granel}<br><strong>Fracionado, mais de 1t:</strong> ${extintorInfo?.regra.mais1t}<br><strong>Fracionado, até 1t:</strong> ${extintorInfo?.regra.ate1t}`;
+      }
       extintorHtml = extintorInfo
-        ? `<div style="margin-top:6px;padding:6px 8px;background:#eef6f0;border-left:3px solid #2d6a4f;font-size:12px;"><strong>🧯 Extintor de Incêndio</strong>${extintorInfo.viaExcecao ? " (exceção específica deste ONU)" : ""}:<br><strong>Granel:</strong> ${extintorInfo.regra.granel}<br><strong>Fracionado, mais de 1t:</strong> ${extintorInfo.regra.mais1t}<br><strong>Fracionado, até 1t:</strong> ${extintorInfo.regra.ate1t}</div>`
+        ? `<div style="margin-top:6px;padding:6px 8px;background:#eef6f0;border-left:3px solid #2d6a4f;font-size:12px;"><strong>🧯 Extintor de Incêndio</strong>${extintorInfo.viaExcecao ? " (exceção específica deste ONU)" : ""}:<br>${regraExtintorTxt}</div>`
         : "";
       const excecao3077_3082 = (onu === 3077 || onu === 3082)
         ? ` Exceção específica dos ONUs 3077/3082: o nome técnico pode ser um nome apresentado em letras MAIÚSCULAS na Coluna 2 da Relação de Produtos Perigosos, desde que esse nome não inclua "N.E." e a Provisão 274 não se aplique a ele. Conforme o nome do produto descrito acima, de acordo com a Coluna 2 — o app já traz esse dado direto da fonte oficial.`
