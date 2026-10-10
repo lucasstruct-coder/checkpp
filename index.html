@@ -972,7 +972,10 @@ function renderizarImagensClasse(imagens, prefixo, tamanho){
   if(imagens.length === 0) return "";
   if(imagens[0].ou){
     const partes = imagens.map(im => `<img src="${im.img}" style="width:${tamanho}px;height:${tamanho}px;" alt="Rótulo ${im.label}">`);
-    return `<div style="text-align:center;">${partes.join('<span style="margin:0 3px;font-size:11px;color:var(--texto-claro);">ou</span>')}<div style="font-size:9px;color:var(--texto-claro);">${prefixo} ${imagens[0].label}</div></div>`;
+    // As duas imagens são DUAS VERSÕES do MESMO rótulo (uma OU outra serve) —
+    // não são dois rótulos diferentes (principal + subsidiário). A borda
+    // tracejada e a legenda deixam claro que o "ou" vale só dentro do grupo.
+    return `<div style="text-align:center;border:1px dashed var(--cinza-borda);border-radius:6px;padding:4px 6px;"><div style="display:flex;align-items:center;justify-content:center;gap:4px;">${partes.join('<span style="font-size:11px;font-weight:700;color:var(--texto-claro);">ou</span>')}</div><div style="font-size:9px;color:var(--texto-claro);">${prefixo} ${imagens[0].label} — 2 versões do mesmo rótulo, vale uma OU outra</div></div>`;
   }
   return imagens.map(im => `<div style="text-align:center;"><img src="${im.img}" style="width:${tamanho}px;height:${tamanho}px;" alt="Rótulo ${im.label}"><div style="font-size:9px;color:var(--texto-claro);">${prefixo} ${im.label}</div></div>`).join("");
 }
@@ -6065,9 +6068,13 @@ function aplicarAvisoRotuloAdicional(numerosOnu){
     const classesSubsid = RISCO_SUBSIDIARIO[onu] || [];
     const imagensSubsid = classesSubsid.flatMap(c => obterImagensClasse(c));
     if(imagensPrincipal.length === 0 && imagensSubsid.length === 0) return null;
-    const linhaImgs = `<div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
-      ${renderizarImagensClasse(imagensPrincipal, "Classe", 100)}
-      ${imagensSubsid.length > 0 ? renderizarImagensClasse(imagensSubsid, "Subsid.", 100) : ""}
+    // Principal e subsidiário em cartões separados e rotulados — antes ficavam
+    // lado a lado só com o "ou" das versões, e parecia que o "ou" era entre
+    // principal e subsidiário. Subsidiário é ADICIONAL (os dois são exigidos).
+    const cartao = (titulo, cor, imgs, prefixo) => `<div style="flex:1;min-width:130px;border:2px solid ${cor};border-radius:6px;padding:4px;"><div style="font-size:11px;font-weight:700;color:${cor};margin-bottom:2px;">${titulo}</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">${renderizarImagensClasse(imgs, prefixo, 90)}</div></div>`;
+    const linhaImgs = `<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;justify-content:center;align-items:stretch;">
+      ${cartao("RISCO PRINCIPAL", "#c0392b", imagensPrincipal, "Classe")}
+      ${imagensSubsid.length > 0 ? `<div style="align-self:center;font-weight:700;">+</div>${cartao("RISCO SUBSIDIÁRIO (adicional)", "#c8720a", imagensSubsid, "Subsid.")}` : ""}
     </div>`;
     const rotuloOnu = onusNum.length > 1 ? `<strong style="display:block;">ONU ${onu}</strong>` : "";
     return `<div style="margin-top:6px;text-align:center;">${rotuloOnu}${linhaImgs}</div>`;
@@ -6164,7 +6171,7 @@ function montarBlocoSinalizacaoMultipla(analise){
   const classesTxt = [...new Set(analise.infos.flatMap(x=>[x.info.classe, ...(x.info.riscosSubsidiarios||[]).map(r=>r.classe)]))].join(", ");
   const notaIndef = analise.iguais === "indefinido"
     ? `<div style="margin-top:4px;font-style:italic;">⚠ Mesma classe principal, mas riscos subsidiários diferentes — o manual não detalha esse caso; confira com o Manual (6.4.5/6.4.7 e 6.4.11).</div>` : "";
-  const granel = `<div style="margin-top:6px;"><strong>Granel</strong> (itens 6.4.5/6.4.7):<br>• <strong>Frente e traseira:</strong> painel SEM numeração.<br>• <strong>Laterais:</strong> painel numerado + rótulo(s) de cada produto, ao lado do respectivo compartimento:${laterais}<br>• <strong>Traseira:</strong> rótulos de risco ${analise.iguais === "nao" ? "de TODAS as classes/subclasses transportadas (" + classesTxt + ")" : "da classe transportada"}, adjacentes ao painel.${analise.iguais === "sim" ? "<br>• Mesma classe e sem risco subsidiário: pode ser só 1 rótulo por lateral." : ""}</div>`;
+  const granel = `<div style="margin-top:6px;"><strong>Granel</strong> (itens 6.4.5/6.4.7):<br>• <strong>Frente e traseira:</strong> painel SEM numeração:${vazio}• <strong>Laterais:</strong> painel numerado + rótulo(s) de cada produto, ao lado do respectivo compartimento:${laterais}<br>• <strong>Traseira:</strong> rótulos de risco ${analise.iguais === "nao" ? "de TODAS as classes/subclasses transportadas (" + classesTxt + ")" : "da classe transportada"}, adjacentes ao painel.${analise.iguais === "sim" ? "<br>• Mesma classe e sem risco subsidiário: pode ser só 1 rótulo por lateral." : ""}</div>`;
   let excecao = "";
   if(analise.combustiveis){
     const presentes = ORDEM_FULGOR_6_4_6.filter(o=>analise.infos.some(x=>x.onu===o));
