@@ -6130,8 +6130,78 @@ function aplicarNotaQuantLimitada(numerosOnu){
 // como deveria ficar o painel correto. Usa o Número de Risco do PAINEL
 // (que pode diferir do risco calculado, quando o produto tem exceção
 // registrada na Coluna 5) já disponível via obterInfoProduto.
+// Sinalização com MAIS DE UM produto (ONUs diferentes) — Manual MPO-005,
+// itens 6.4.5 a 6.4.7 (granel) e 6.4.11 (fracionado). Regra central: o
+// painel de segurança deixa de ser numerado na frente/traseira (granel) ou
+// em todo o veículo (fracionado) — "se não possuir nenhum caractere indica
+// o transporte de mais de um produto perigoso" (pág. 47).
+const ONUS_COMBUSTIVEIS_6_4_6 = [1170,1202,1203,3475,1223,1268,1863];
+// ordem de risco (menor ponto de fulgor primeiro), Tabela 13 do manual
+const ORDEM_FULGOR_6_4_6 = [1203,1170,1202,1223];
+function montarPainelSegurancaVazioSvg(){
+  return montarPainelSegurancaSvg("", "");
+}
+function analisarCargaMultiplosProdutos(numerosOnu){
+  const unicos = [...new Set((numerosOnu||[]).map(n=>parseInt(n,10)))];
+  const infos = unicos.map(o=>({onu:o, info:obterInfoProduto(o)})).filter(x=>x.info);
+  if(infos.length < 2) return null;
+  const chave = x => `${x.info.classe}|${(x.info.riscosSubsidiarios||[]).map(r=>r.classe).sort().join(",")}`;
+  const classesPrincipais = new Set(infos.map(x=>x.info.classe));
+  const chaves = new Set(infos.map(chave));
+  let iguais;
+  if(chaves.size === 1) iguais = "sim";
+  else if(classesPrincipais.size === 1) iguais = "indefinido"; // mesma classe, subsidiários diferentes
+  else iguais = "nao";
+  return { infos, iguais, combustiveis: infos.every(x=>ONUS_COMBUSTIVEIS_6_4_6.includes(x.onu)) };
+}
+function montarBlocoSinalizacaoMultipla(analise){
+  const tipoCarga = document.getElementById("meta_tipo_carga")?.value;
+  const vazio = `<div style="text-align:center;margin:4px 0;"><strong style="display:block;">Painel sem inscrições</strong>${montarPainelSegurancaVazioSvg()}</div>`;
+  const laterais = analise.infos.map(x=>{
+    const svg = x.info.numeroRisco ? montarPainelSegurancaSvg(x.info.numeroRisco, String(x.onu)) : "";
+    return `<div style="margin-top:6px;text-align:center;"><strong style="display:block;margin-bottom:4px;">ONU ${x.onu}</strong>${svg || "(Número de Risco não cadastrado — conferir Coluna 5)"}</div>`;
+  }).join("");
+  const classesTxt = [...new Set(analise.infos.flatMap(x=>[x.info.classe, ...(x.info.riscosSubsidiarios||[]).map(r=>r.classe)]))].join(", ");
+  const notaIndef = analise.iguais === "indefinido"
+    ? `<div style="margin-top:4px;font-style:italic;">⚠ Mesma classe principal, mas riscos subsidiários diferentes — o manual não detalha esse caso; confira com o Manual (6.4.5/6.4.7 e 6.4.11).</div>` : "";
+  const granel = `<div style="margin-top:6px;"><strong>Granel</strong> (itens 6.4.5/6.4.7):<br>• <strong>Frente e traseira:</strong> painel SEM numeração.<br>• <strong>Laterais:</strong> painel numerado + rótulo(s) de cada produto, ao lado do respectivo compartimento:${laterais}<br>• <strong>Traseira:</strong> rótulos de risco ${analise.iguais === "nao" ? "de TODAS as classes/subclasses transportadas (" + classesTxt + ")" : "da classe transportada"}, adjacentes ao painel.${analise.iguais === "sim" ? "<br>• Mesma classe e sem risco subsidiário: pode ser só 1 rótulo por lateral." : ""}</div>`;
+  let excecao = "";
+  if(analise.combustiveis){
+    const presentes = ORDEM_FULGOR_6_4_6.filter(o=>analise.infos.some(x=>x.onu===o));
+    const todosNaTabela = analise.infos.every(x=>ORDEM_FULGOR_6_4_6.includes(x.onu));
+    const maior = todosNaTabela ? presentes[0] : null;
+    excecao = `<div style="margin-top:6px;padding:4px 6px;background:#fff8e1;border-left:3px solid #c8720a;">⛽ <strong>Exceção 6.4.6 (combustíveis em tanque compartimentado):</strong> pode seguir a regra acima OU portar só o painel do produto de maior risco (menor ponto de fulgor)${maior ? ` — aqui, <strong>ONU ${maior}</strong>` : ""} com rótulo da classe 3 adjacente.</div>`;
+  }
+  const fracionado = `<div style="margin-top:6px;"><strong>Fracionado</strong> (item 6.4.11):<br>• <strong>Painel de segurança SEM inscrições</strong> (todas as posições):${vazio}• <strong>Rótulos de risco:</strong> ${analise.iguais === "nao" ? "<strong>NÃO devem estar afixados</strong> (classes/subclasses diferentes)." : analise.iguais === "sim" ? "da classe comum (traseira e laterais; proibido na frente)." : "conferir (ver aviso)."}<br>• Demais símbolos (se exigíveis): em todas as extremidades.</div>`;
+  const corpo = tipoCarga === "Granel" ? granel + excecao : tipoCarga === "Fracionado" ? fracionado : granel + excecao + fracionado;
+  const cab = `<div><strong>⚠ Mais de um produto (ONUs diferentes): o painel NÃO leva numeração nas posições abaixo</strong> (Manual MPO-005, p. 47).${tipoCarga ? "" : " Tipo de carga ainda não informado — mostrando as duas modalidades."}</div>`;
+  return cab + corpo + notaIndef;
+}
+function aplicarSinalizacaoMultiplosProdutos(numerosOnu){
+  const analise = analisarCargaMultiplosProdutos(numerosOnu);
+  ["painelseg","rotulorisco"].forEach(id=>{
+    const opts = document.querySelector(`.opts[data-id="${id}"]`);
+    if(!opts) return;
+    const itemDiv = opts.closest(".item");
+    const avId = id === "painelseg" ? "modelo_painel_seguranca_item" : "aviso_rotulo_multi_item";
+    let aviso = document.getElementById(avId);
+    if(!analise){ if(aviso) aviso.remove(); return; }
+    if(!aviso){
+      aviso = document.createElement("div");
+      aviso.id = avId;
+      aviso.style.cssText = "margin-top:6px;padding:8px;background:#f7f7f7;border-left:3px solid #FF6600;font-size:12px;";
+      itemDiv.appendChild(aviso);
+    }
+    aviso.innerHTML = id === "painelseg"
+      ? montarBlocoSinalizacaoMultipla(analise)
+      : `<strong>🏷 Rótulos com mais de um produto:</strong> ${document.getElementById("meta_tipo_carga")?.value === "Fracionado" ? (analise.iguais === "nao" ? "classes diferentes — rótulos NÃO afixados (6.4.11)." : "traseira e laterais com o rótulo da classe comum; proibido na frente.") : "laterais: rótulos de cada produto junto ao seu compartimento; traseira: rótulos de todas as classes transportadas, adjacentes ao painel (6.4.5/6.4.7)."} Ver detalhes no item Painel de Segurança.`;
+  });
+  return !!analise;
+}
+
 function aplicarModeloPainelSeguranca(numerosOnu){
   numerosOnu = numerosOnu || [];
+  if(aplicarSinalizacaoMultiplosProdutos(numerosOnu)) return;
   const opts = document.querySelector('.opts[data-id="painelseg"]');
   if(!opts) return;
   const itemDiv = opts.closest(".item");
@@ -6203,6 +6273,99 @@ function aplicarAvisoExtintor(numerosOnu){
       itemDiv.appendChild(aviso);
     }
     aviso.innerHTML = `🧯 <strong>Extintor exigido pro(s) produto(s) informado(s):</strong>${linhas.join("")}`;
+  } else {
+    if(aviso) aviso.remove();
+  }
+}
+
+// Tabela "B — PRODUTOS PERIGOSOS/ONU/GRUPOS/TEMPO DE CONSTRUÇÃO" do Anexo O
+// da Portaria Inmetro Nº 128/2022, reproduzida no Manual MPO-005 (págs.
+// 527-531). É essa tabela que define o Grupo que o campo 16 do CIPP (e o
+// campo 22 do CTPP) deve trazer pra cada produto, conforme o equipamento
+// (tanque/cisterna) em que ele pode ser transportado.
+// Mapeamento ONU → Grupo(s) possíveis (alguns ONUs aparecem em mais de um
+// grupo, a depender da concentração/apresentação do produto — nesses casos
+// o app lista todos e cabe ao fiscal confirmar qual bate com o produto
+// concreto, mesma lógica já usada pras "variantes" do DoCPP).
+// Grupo 4B: a extração do PDF confirma com segurança QUAIS ONUs pertencem
+// ao grupo, mas não dá pra parear com certeza cada ONU ao nome exato do
+// produto (o layout da tabela embaralhou isso) — por isso o app mostra só
+// "pertence ao Grupo 4B", sem citar o nome do produto nesse caso específico.
+// Grupos da série "27" (27A1...27J) referenciam o próprio Anexo da
+// Resolução ANTT nº 5.947/2021 (em vez de ONUs específicos, usam "(*)") —
+// não são mapeáveis por ONU a partir desta tabela, então não entram aqui.
+const GRUPOS_CIPP = {
+  "1":   [1005,1017,1050,1052,1250,1790,1810,1834,2186],
+  "2A":  [1008,1045,1079,1741,1749,1753,1759,1760,1776,1777,1778,1792,1803,1805,1806,1810,1812,1815,1824,1826,1827,1829,1832,1833,1834,1835,1858,1860,1906,1908,1938,1940,1986,1987,1988,2031,2075,2186,2190,2437,2501,2577,2581,2582,2583,2584,2586,2587,2588,2626,2644,2675,2693,2734,2735,2796,2797,2818,2856,2869,2920,2922,2923,2927,2931,3080,3094,3246,3259,3260,3261,3262,3264,3265,3266,3267,3301,3412,3431,3453],
+  "2B":  [1052,1250,1790,1834,2186],
+  "2C":  [1715,1736,1737,1738,1739,1740,1748,1750,1752,1754,1758,1764,1765,1766,1767,1768,1769,1770,1771,1773,1774,1775,1780,1781,1782,1783,1784,1787,1788,1793,1794,1796,1798,1799,1800,1801,1802,1807,1808,1809,1811,1814,1816,1818,1819,1823,1830,1835,1848,1906,1938,2031,2186,2491,2504,2576,2672,2691,2692,2693,2817,2865,2906,2920,2967,3264],
+  "2D":  [1719,1759,1760,1775,1778,1783,1791,1813,1819,1823,1824,1906,2238,2308,2444,2576,2584,2672,2735,2796,2797,2831,2922,2923,3267,3412],
+  "2E":  [1724,1725,1726,1727,1728,1729,1730,1731,1732,1733,1736,1753,1757,1760,1762,1763,1764,1784,1796,1801,1816,1818,1897,1908,2267,2434,2435,2581,2582,2586,2691,2733,2734,2920,2922,2923],
+  "2F":  [1810,1826,1832,1833,2588],
+  "3":   [2031],
+  "4A":  [1719,1759,1760,1775,1778,1783,1791,1813,1819,1823,1824,1906,2238,2308,2444,2576,2584,2672,2735,2796,2797,2831,2922,2923,3267,3412],
+  "4B":  [1789,1830,2796,1778,2582,1840,2802,1760,2581],
+  "4C":  [1830,1832,1906,2240,2584,2667,2796,2797,2920],
+  "4D":  [1680,1689,1714,2321,2655,2777,2805,2922],
+  "4E":  [1719,1759,1813,1824,1906,2672,2679,2735,2796,2797,2922,2923],
+  "6A":  [1203,1223,1268,1863,1987,1993,3271,3295],
+  "6B":  [1230,1986,2924],
+  "6C":  [1090,1104,1105,1120,1170,1177,1197,1212,1219,1224,1232,1245,1263,1266,1293,1296,1306,1920,1992,2050,2366,2619,3271],
+  "6D":  [1133,1139,1210,1263,1866,1917,1921,1992,2325,2522,2733,2924,2929],
+  "6E":  [1593,1710,1897,1992,2831],
+  "6F":  [1114,1294,1300,1888,1992,2222],
+  "6G":  [1265,1715,1760,1992,2924],
+  "6H":  [1203,1268,1300,1950,1993,2924],
+  "6I":  [1098,1105,1117,1170,1274,1864,1992,2560],
+  "6J":  [1760,1824,1830,1832,1906,2584,2796,2797,3264],
+  "7A":  [1267,1268,1999,3082,3256,3257],
+  "7B":  [1203,1223,1268,1203],
+  "7C":  [1202,1223,1267,1268,1270,1999,3082],
+  "7D":  [1267,1270,1999,3082],
+  "7E":  [1267,1268,1270,1999,3082],
+  "7F":  [1202,1223,1267,1268,1270,1999,3082],
+};
+// índice inverso (ONU → lista de grupos), montado uma vez
+const GRUPOS_CIPP_POR_ONU = (()=>{
+  const indice = {};
+  Object.keys(GRUPOS_CIPP).forEach(grupo=>{
+    GRUPOS_CIPP[grupo].forEach(onu=>{
+      if(!indice[onu]) indice[onu] = [];
+      indice[onu].push(grupo);
+    });
+  });
+  return indice;
+})();
+
+// Aviso dinâmico no item CIPP: a partir do(s) ONU(s) já confirmado(s),
+// mostra qual(is) Grupo(s) da tabela do Anexo O (Portaria Inmetro Nº
+// 128/2022) o campo 16 do certificado deveria trazer — sem pedir nenhum
+// dado novo do fiscal. Só informativo: não marca nada automaticamente,
+// porque o grupo certo também depende do equipamento concreto vistoriado.
+function aplicarAvisoCipp(numerosOnu){
+  numerosOnu = numerosOnu || [];
+  const opts = document.querySelector('.opts[data-id="cipp"]');
+  if(!opts) return;
+  const itemDiv = opts.closest(".item");
+  let aviso = document.getElementById("aviso_cipp_item");
+  const onusNum = numerosOnu.map(n => parseInt(n,10));
+  const linhas = onusNum.map(onu=>{
+    const grupos = GRUPOS_CIPP_POR_ONU[onu];
+    if(!grupos || grupos.length === 0) return null;
+    const gruposTxt = grupos.map(g=>`<strong>${g}</strong>`).join(grupos.length > 1 ? " ou " : "");
+    const avisoMultiplo = grupos.length > 1
+      ? ` — mais de um grupo possível pra esse ONU (depende da concentração/apresentação do produto); confira qual bate com o produto concreto.`
+      : "";
+    return `<div style="margin-top:4px;"><strong>ONU ${onu}</strong> → campo 16 do CIPP deve trazer Grupo ${gruposTxt}${avisoMultiplo}</div>`;
+  }).filter(Boolean);
+  if(linhas.length > 0){
+    if(!aviso){
+      aviso = document.createElement("div");
+      aviso.id = "aviso_cipp_item";
+      aviso.style.cssText = "margin-top:6px;padding:6px 8px;background:#eef6f0;border-left:3px solid #2d6a4f;font-size:12px;";
+      itemDiv.appendChild(aviso);
+    }
+    aviso.innerHTML = `🛢 <strong>Grupo esperado (Anexo O, Portaria Inmetro Nº 128/2022):</strong>${linhas.join("")}`;
   } else {
     if(aviso) aviso.remove();
   }
@@ -6309,7 +6472,7 @@ function validarOnu(){
   const box = document.getElementById("onuValidacao");
   const raw = document.getElementById("meta_onu").value.trim();
   const numeros = raw.split(/[,;\s]+/).map(s=>s.replace(/\D/g,"")).filter(Boolean);
-  if(numeros.length === 0){ box.style.display="none"; window.ultimoPainelOnuHtml = ""; const bd = document.getElementById("onuValidacaoDashboard"); if(bd){ bd.innerHTML=""; bd.style.display="none"; } limparFiltroEpi(); aplicarFiltroSinalizacaoEspecial([]); aplicarAvisoProvisao274([]); aplicarAvisoPE375([]); aplicarAvisoExtintor([]); aplicarAvisoDocpp([]); aplicarAvisoRotuloAdicional([]); aplicarNotaQuantLimitada([]); aplicarFiltroOutrosDocumentos([]); aplicarModeloPainelSeguranca([]); aplicarFiltroOnu3509([]); return; }
+  if(numeros.length === 0){ box.style.display="none"; window.ultimoPainelOnuHtml = ""; const bd = document.getElementById("onuValidacaoDashboard"); if(bd){ bd.innerHTML=""; bd.style.display="none"; } limparFiltroEpi(); aplicarFiltroSinalizacaoEspecial([]); aplicarAvisoProvisao274([]); aplicarAvisoPE375([]); aplicarAvisoExtintor([]); aplicarAvisoDocpp([]); aplicarAvisoCipp([]); aplicarAvisoRotuloAdicional([]); aplicarNotaQuantLimitada([]); aplicarFiltroOutrosDocumentos([]); aplicarModeloPainelSeguranca([]); aplicarFiltroOnu3509([]); return; }
   let html = "";
   let htmlDashboard = "";
   let gruposEncontrados = [];
@@ -6421,6 +6584,7 @@ function validarOnu(){
   aplicarAvisoPE375(numeros);
   aplicarAvisoExtintor(numeros);
   aplicarAvisoDocpp(numeros);
+  aplicarAvisoCipp(numeros);
   aplicarAvisoRotuloAdicional(numeros);
   aplicarFiltroOutrosDocumentos(numeros);
   aplicarModeloPainelSeguranca(numeros);
