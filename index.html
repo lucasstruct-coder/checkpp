@@ -6547,8 +6547,8 @@ function validarOnu(){
       html += `<div style="margin-bottom:6px;">${infoProdutoHtml}<strong>ONU ${onu} → Grupo ${grupo} de EPI</strong><br>${GRUPOS_EPI[grupo]}<br><span style="color:var(--texto-claro);">Os itens de EPI não exigidos para este grupo já foram marcados como N/A e sinalizados abaixo.</span>${extintorHtml}</div>`;
       htmlDashboard += `<div style="margin-bottom:6px;">${infoProdutoHtml}<strong>ONU ${onu} → Grupo ${grupo} de EPI</strong><br>${GRUPOS_EPI[grupo]}<br><span style="color:var(--texto-claro);">Os itens de EPI não exigidos para este grupo já foram marcados como N/A e sinalizados abaixo.</span></div>`;
     } else {
-      html += `<div style="margin-bottom:6px;">${infoProdutoHtml}<strong>ONU ${onu}</strong> — não encontrado na tabela de grupos de EPI (confira se digitou corretamente). Se o produto existir e não estiver na lista, é possível que seja um ONU fora da faixa coberta pela NBR 9735 — consulte o Anexo A da norma. Nenhum item foi marcado automaticamente.${extintorHtml}</div>`;
-      htmlDashboard += `<div style="margin-bottom:6px;">${infoProdutoHtml}<strong>ONU ${onu}</strong> — não encontrado na tabela de grupos de EPI (confira se digitou corretamente). Se o produto existir e não estiver na lista, é possível que seja um ONU fora da faixa coberta pela NBR 9735 — consulte o Anexo A da norma. Nenhum item foi marcado automaticamente.</div>`;
+      html += `<div style="margin-bottom:6px;">${infoProdutoHtml}${ONUS_NA_RELACAO_SEM_DADOS.includes(onu) ? `<div style="padding:6px 8px;background:#fff8e1;border-left:3px solid #c8720a;"><strong>ONU ${onu}</strong> — consta na Relação de Produtos Perigosos, mas o app ainda não tem os dados desse produto cadastrados. Confira classe, EPI e sinalização manualmente na Resolução ANTT 5.998/22. Nenhum item de EPI foi dispensado.</div>` : infoProduto ? `<strong>ONU ${onu}</strong> — consta na Relação de Produtos Perigosos, mas não está na tabela de grupos de EPI (NBR 9735, Anexo A) — consulte a norma. Nenhum item de EPI foi dispensado: todos continuam exigidos.` : `<div style="padding:6px 8px;background:#fdecea;border-left:3px solid #c0392b;"><strong>⚠ ONU ${onu} NÃO consta na Relação de Produtos Perigosos (Res. ANTT 5.998/22)</strong> — confira se digitou corretamente (ex.: erro de digitação). Sem produto válido, o app não consegue definir o grupo de EPI: <strong>nenhum item foi dispensado, todos os EPIs continuam exigidos</strong>.</div>`}${extintorHtml}</div>`;
+      htmlDashboard += `<div style="margin-bottom:6px;">${infoProdutoHtml}${ONUS_NA_RELACAO_SEM_DADOS.includes(onu) ? `<div style="padding:6px 8px;background:#fff8e1;border-left:3px solid #c8720a;"><strong>ONU ${onu}</strong> — consta na Relação de Produtos Perigosos, mas o app ainda não tem os dados desse produto cadastrados. Confira classe, EPI e sinalização manualmente na Resolução ANTT 5.998/22. Nenhum item de EPI foi dispensado.</div>` : infoProduto ? `<strong>ONU ${onu}</strong> — consta na Relação de Produtos Perigosos, mas não está na tabela de grupos de EPI (NBR 9735, Anexo A) — consulte a norma. Nenhum item de EPI foi dispensado: todos continuam exigidos.` : `<div style="padding:6px 8px;background:#fdecea;border-left:3px solid #c0392b;"><strong>⚠ ONU ${onu} NÃO consta na Relação de Produtos Perigosos (Res. ANTT 5.998/22)</strong> — confira se digitou corretamente (ex.: erro de digitação). Sem produto válido, o app não consegue definir o grupo de EPI: <strong>nenhum item foi dispensado, todos os EPIs continuam exigidos</strong>.</div>`}</div>`;
     }
   });
   box.innerHTML = html;
@@ -6949,9 +6949,24 @@ function expandirDadosPrimarios(){
 // Trava o botão de iniciar até esses campos serem preenchidos, pra não
 // correr o risco de fiscalizar (e autuar) com Estado do Veículo errado
 // por padrão silencioso, ou sem ONU (quebra o filtro de EPI).
+// Números digitados no campo ONU que NÃO constam na Relação de Produtos
+// Perigosos (Res. ANTT 5.998/22) — sem produto válido o app não sabe qual
+// EPI/sinalização/documento exigir, então a fiscalização não deve iniciar.
+// ONUs que CONSTAM na Relação de Produtos Perigosos mas que o app ainda não
+// tem cadastrados com dados completos (classe, grupo, etc.) — não podem ser
+// tratados como "inválidos", senão travariam uma fiscalização legítima.
+// Aparecem na Relação sem os dados lidos de forma confiável da extração do
+// PDF; o fiscal confere classe/EPI manualmente nesses casos.
+const ONUS_NA_RELACAO_SEM_DADOS = [190,1372,1387,1856,1857,1910,2071,2216,2807,2812,3334,3335,3360,3496];
+function obterOnusInvalidos(){
+  const raw = document.getElementById("meta_onu").value.trim();
+  const numeros = raw.split(/[,;\s]+/).map(s=>s.replace(/\D/g,"")).filter(Boolean);
+  return [...new Set(numeros.map(n=>parseInt(n,10)))].filter(o => !obterInfoProduto(o) && !ONUS_NA_RELACAO_SEM_DADOS.includes(o));
+}
 function validarCamposEssenciais(){
   const tipoCarga = document.getElementById("meta_tipo_carga").value;
   const onu = document.getElementById("meta_onu").value.trim();
+  const onusInvalidos = onu ? obterOnusInvalidos() : [];
   const estadoVeiculo = document.getElementById("meta_estado_veiculo").value;
   const quantLimitadaMarcado = document.getElementById("meta_quant_limitada").checked;
   // "Quantidade Limitada" (Manual MPO-005, item 16.1) é conceito
@@ -6959,7 +6974,7 @@ function validarCamposEssenciais(){
   // a combinação em vez de deixar passar e confiar que ninguém marca
   // errado (evita dispensar itens indevidamente por engano).
   const combinacaoInvalidaGranel = tipoCarga === "Granel" && quantLimitadaMarcado;
-  let valido = !!tipoCarga && !!onu && onuConfirmado && !!estadoVeiculo && !combinacaoInvalidaGranel;
+  let valido = !!tipoCarga && !!onu && onuConfirmado && !!estadoVeiculo && !combinacaoInvalidaGranel && onusInvalidos.length === 0;
 
   // Se "Vazio e Descontaminado", exige também a resposta do certificado
   if(estadoVeiculo === "vazio_descontaminado"){
@@ -6970,7 +6985,9 @@ function validarCamposEssenciais(){
   const btn = document.getElementById("btnIniciarFiscalizacao");
   const texto = document.getElementById("btnIniciarFiscalizacaoTexto");
   btn.disabled = !valido;
-  if(combinacaoInvalidaGranel){
+  if(onusInvalidos.length > 0){
+    texto.textContent = `ONU ${onusInvalidos.join(", ")} não consta na Relação de Produtos Perigosos — corrija pra iniciar`;
+  } else if(combinacaoInvalidaGranel){
     texto.textContent = "Quantidade Limitada não existe pra Granel — desmarque a caixa ou mude pra Fracionado";
   } else if(!tipoCarga || !onu || !estadoVeiculo){
     texto.textContent = "Preencha os campos com * para iniciar";
